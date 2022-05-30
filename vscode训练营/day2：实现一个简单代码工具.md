@@ -92,9 +92,12 @@ command的名字一般是[插件名称(自取).[具体名称]，这里我就叫�
 
 ### 二、调用命令
 
-Extension.ts是插件的入口，一般包括两个函数 activate 和 deactivate。其中 activate 函数是插件激活时也就是在注册的 Activation Event 发生的时候就会执行。deactivate 中放的是插件关闭时执行的代码。
+Extension.js是插件的入口，一般包括两个函数 
 
-下面我们在extension.ts中的activate中书写逻辑
+- activate ：插件激活时也就是在注册的 Activation Event 发生的时候就会执行
+- deactivate。插件关闭时执行的代码。
+
+下面我们在extension.js中的activate中书写逻辑
 
 ```
 export function activate(context: vscode.ExtensionContext) {  
