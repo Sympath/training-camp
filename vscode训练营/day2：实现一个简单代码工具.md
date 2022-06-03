@@ -2,7 +2,7 @@
 
 完成一个简单插件，功能是 使用快捷键 或者鼠标右键选项，就能把选中的内容在下一行用console输出
 
-<img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2iodjcdcvg20wu0u0div.gif" alt="Alt text" style="zoom:33%;" />
+![2022-06-03 08.48.42](https://tva1.sinaimg.cn/large/e6c9d24ely1h2uroibc0hg20yq0cqdgy.gif)
 
 ## 怎么做到：尽可能做到复制粘贴就能有成果
 
