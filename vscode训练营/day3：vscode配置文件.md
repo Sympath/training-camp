@@ -45,7 +45,7 @@
 
 ```js
 let formatOnSave = require('./formatOnSave');
-export function activate(context: vscode.ExtensionContext) {  
+function activate(context: vscode.ExtensionContext) {  
 // 注册命令名和对应的回调函数
     const insertLog = vscode.commands.registerCommand('edit-article.formatOnSave', formatOnSave);
     context.subscriptions.push(insertLog);
