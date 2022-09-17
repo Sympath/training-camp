@@ -1,0 +1,205 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title>shell之语句 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../shell编程训练营/index.html" class="breadcrumb-item">shell编程训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html" class="breadcrumb-item">shell之语句</a></div><h1 class="article-title">shell之语句</h1><div class="article"><ul><li>顺序</li><li>测试：退出与退出状态、测试命令test</li><li>分支：if-then</li><li>循环：for/while/do-while</li></ul><h2 id="测试命令学习分支语句的前提">测试命令（学习分支语句的前提） <a class="markdownIt-Anchor" href="#测试命令学习分支语句的前提">#</a></h2><p>参考文档：</p><ul><li><a href="https://www.cnblogs.com/f-ck-need-u/p/7427357.html" target="_blank" rel="noopener">https://www.cnblogs.com/f-ck-need-u/p/7427357.html</a></li></ul><h3 id="状态-和-exit">状态：$? 和 exit <a class="markdownIt-Anchor" href="#状态-和-exit">#</a></h3><p>根据程序是否正常执行（程序退出的状态）进行判断</p><ul><li>exit：手动退出shell的命令</li><li>exit 10 返回10给shell，返回值非0为不正常退出</li><li>$? 用于判读昂当前shell前一个进程是否正常退出（非0为不正常退出）</li></ul><h3 id="命令test">命令：test <a class="markdownIt-Anchor" href="#命令test">#</a></h3><p>tesh命令可以用于检查文件或者比较值，可用于如下功能（可以用<code>man test</code>查看更具体的命令）</p><ul><li>整数比较测试</li><li>字符串测试</li><li>文件测试</li></ul><p>test测试语句可以简化为[]符号，而[]符号还有扩展写法[[]] ，支持 &amp;&amp;、||、&lt;、&gt;（推荐使用[[]]）</p><h5 id="字符串测试">字符串测试 <a class="markdownIt-Anchor" href="#字符串测试">#</a></h5><p>两个字符串是否相等：[str1 = str2] 和 [str1 != str2]</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+str1=&#x27;a&#x27;
+str2=&#x27;a&#x27;
+if [ $str1 = $str2 ]; then
+    echo &#x27;等于&#x27;
+
+elif [ $str1 != $str2 ]; then
+    echo &#x27;不等于&#x27;
+fi
+</code></pre><p>读取字符串长度是否是0（空字符串）：-z</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+str1=&#x27;a&#x27;
+str2=&#x27;&#x27;
+if [ -z $str1 ]; then
+    echo &#x27;str1为空字符串&#x27;
+else
+    echo &#x27;str1不为空字符串&#x27;
+fi
+
+if [ -z $str2 ]; then
+    echo &#x27;str2为空字符串&#x27;
+else
+    echo &#x27;str2不为空字符串&#x27;
+fi
+</code></pre><h5 id="整数比较测试">整数比较测试 <a class="markdownIt-Anchor" href="#整数比较测试">#</a></h5><table><thead><tr><th>功能</th><th>[]中的符号</th><th>[[]]中的支持</th></tr></thead><tbody><tr><td>等于</td><td>-eq 和 = 均支持</td><td>=</td></tr><tr><td>大于等于</td><td>-ge</td><td>暂无</td></tr><tr><td>大于</td><td>-gt</td><td>&gt;</td></tr><tr><td>小于等于</td><td>-le</td><td>暂无</td></tr><tr><td>小于</td><td>-lt</td><td>&lt;</td></tr><tr><td>不等于</td><td>-ne</td><td>!=</td></tr></tbody></table><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+a=1
+b=2
+<span class="hljs-meta">
+#</span><span class="bash"> <span class="hljs-keyword">if</span> [ <span class="hljs-variable">$a</span> = <span class="hljs-variable">$b</span> ]; <span class="hljs-keyword">then</span></span>
+if [ $a -eq $b ]; then
+    echo &#x27;a 等于 b&#x27;
+elif [ $a -ge $b ]; then
+    echo &#x27;a 大于等于 b&#x27;
+elif [ $a -gt $b ]; then
+    echo &#x27;a 大于 b&#x27;
+elif [ $a -le $b ]; then
+    echo &#x27;a 小于等于 b&#x27;
+elif [ $a -lt $b ]; then
+    echo &#x27;a 小于 b&#x27;
+elif [ $a -ne $b ]; then
+    echo &#x27;a 不等于 b&#x27;
+fi
+
+if [[ $a = $b ]]; then
+    echo &#x27;a 等于 b&#x27;
+    # elif [[ $a &gt;= $b ]]; then
+    # echo &#x27;a 大于等于 b&#x27;
+elif [[ $a &gt; $b ]]; then
+    echo &#x27;a 大于 b&#x27;
+<span class="hljs-meta">#</span><span class="bash"> <span class="hljs-keyword">elif</span> [[ <span class="hljs-variable">$a</span> &lt;= <span class="hljs-variable">$b</span> ]]; <span class="hljs-keyword">then</span></span>
+<span class="hljs-meta">#</span><span class="bash">     <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;a 小于等于 b&#x27;</span></span>
+elif [[ $a &lt; $b ]]; then
+    echo &#x27;a 小于 b&#x27;
+elif [[ $a != $b ]]; then
+    echo &#x27;a 不等于 b&#x27;
+fi
+</code></pre><h5 id="文件测试">文件测试 <a class="markdownIt-Anchor" href="#文件测试">#</a></h5><table><thead><tr><th>功能</th><th>符号</th><th>例子</th></tr></thead><tbody><tr><td>-b</td><td></td><td></td></tr><tr><td>-e</td><td>路径存在，不区分文件和目录</td><td>test -e [路径] 或 [ -e [路径]]</td></tr><tr><td>-d</td><td>目录是否存在</td><td>test -d [路径] 或 [ -d [路径]]</td></tr><tr><td>-f</td><td>文件是否存在</td><td>test -f [路径] 或 [ -f [路径]]</td></tr><tr><td>-x</td><td>文件是否可执行</td><td></td></tr></tbody></table><h2 id="分支语句">分支语句 <a class="markdownIt-Anchor" href="#分支语句">#</a></h2><ul><li>基础if</li><li>if-else</li><li>if-elif</li><li>嵌套if</li><li>case语句</li></ul><h3 id="基本用法基础if">基本用法：基础if <a class="markdownIt-Anchor" href="#基本用法基础if">#</a></h3><ul><li>测试语句</li><li>命令返回值</li></ul><pre class="hljs"><code>if [ 测试条件成立 || 命令返回值为0 ]; then
+相关行为
+fi # 结束
+</code></pre><p>实例</p><pre class="hljs"><code>if [ $UID = 0 ]; then
+    echo &quot; root user &quot;
+fi
+if [ pwd ]; then
+    echo &quot; root user &quot;
+fi
+</code></pre><h3 id="基本用法if-else">基本用法：if-else <a class="markdownIt-Anchor" href="#基本用法if-else">#</a></h3><pre class="hljs"><code>if [ 测试条件成立 || 命令返回值为0 ]; then
+相关行为
+elif
+相关行为
+fi # 结束
+</code></pre><p>实例</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+if [ $UID = 0 ]; then
+    echo &quot; root user &quot;
+elif
+    echo &quot; $UID user &quot;
+fi
+</code></pre><h3 id="基本用法if-elif-else">基本用法：if-elif-else <a class="markdownIt-Anchor" href="#基本用法if-elif-else">#</a></h3><pre class="hljs"><code>if [ 测试条件成立 || 命令返回值为0 ]; then
+相关行为
+elif [ 测试条件成立 || 命令返回值为0 ]; then
+相关行为
+elif
+相关行为
+fi # 结束
+</code></pre><p>实例</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+if [ $UID = 0 ]; then
+    echo &quot; root user &quot;
+elif [ $UID = 501 ]; then
+		echo &quot; wangzy user &quot;
+else
+    echo &quot; $UID user &quot;
+fi
+</code></pre><h3 id="基本用法嵌套if">基本用法：嵌套if <a class="markdownIt-Anchor" href="#基本用法嵌套if">#</a></h3><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+if [ 测试条件成立 || 命令返回值为0 ]; then
+	if [ 测试条件成立 || 命令返回值为0 ]; then
+  相关行为
+  else
+  相关行为
+  fi # 结束
+else
+相关行为
+fi # 结束
+</code></pre><p>实例实现：先判断是不是王志远账户，是则再执行对应文件</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+if [ $UID = 0 ]; then
+    echo &quot; root user &quot;
+elif [ $UID = 501 ]; then
+    if [ -x /Users/wzyan/Documents/selfspace/kkb-down/demo/if/index.sh ]; then
+        $(pwd)/index.sh
+    else
+        echo &quot; wangzy user error $(pwd)&quot;
+    fi
+else
+    if [ $(pwd) = &quot;/Users/wzyan/Documents/selfspace/kkb-down/demo/if&quot; ]; then
+        echo &quot; wangzy user  path&quot;
+    else
+        echo &quot; wangzy user error $(pwd)&quot;
+    fi
+fi
+
+</code></pre><h3 id="case语句">case语句 <a class="markdownIt-Anchor" href="#case语句">#</a></h3><pre class="hljs"><code>case &quot;$变量&quot; in
+&quot;情况1&quot; )
+命令...;;
+&quot;情况2&quot; )
+命令...;;
+* )
+命令...;;
+esac
+</code></pre><p>实例实现：先判断是不是王志远账户，是则再执行对应文件</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+case &quot;$1&quot; in
+&quot;start&quot; | &quot;restart&quot;)
+    echo $0 starting...
+    ;;
+&quot;stop&quot;)
+    echo $0 stoping...
+    ;;
+*)
+    echo &quot;$0 传参错误 {start|stop|restart|reload}&quot;
+    ;;
+esac
+
+</code></pre><h2 id="循环语句">循环语句 <a class="markdownIt-Anchor" href="#循环语句">#</a></h2><ul><li>for</li><li>c语言风格的for</li><li>while</li><li>util</li><li>嵌套循环</li><li>使用关键字break和continue</li></ul><h3 id="for循环">for循环 <a class="markdownIt-Anchor" href="#for循环">#</a></h3><p>注意：</p><ol><li>当使用反引号或者$()执行命令时，其结果会被当作列表处理</li><li>列表中包含多个变量，变量间用空格分隔</li><li>对文本处理时，要用文本查看命令取出文本内容，默认装处理，如果出现空格就会当成多行处理</li></ol><pre class="hljs"><code>for 参数 in 列表
+do 执行的命令
+done #封闭一个循环
+</code></pre><p>实例实现：遍历列表输出</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+for i in {1..9}
+do zzxzxxxzzzzzzzzzzzzzzzzzzzzzzzzzzzxxxxxecho hello; echo $i
+done #封闭一个循环
+<span class="hljs-meta">#</span><span class="bash"> 读取指定目录下的所有可执行sh文件</span>
+for sc_name in /etc/profile.d/*.sh
+do echo $sc_name; echo $i
+done #封闭一个循环
+</code></pre><p>实例实现：读取命令结果进行取出所有mp3文件的文件名（basename [文件路径] [文件后缀]）</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+for filename in `ls *.mp3`
+do 
+	mv $filename $(basename $filename .mp3).mp4
+done
+</code></pre><h3 id="c语言风格的for">c语言风格的for <a class="markdownIt-Anchor" href="#c语言风格的for">#</a></h3><pre class="hljs"><code>for((变量初始化;循环判断条件;变量变化))
+do
+	循环执行命令
+done
+</code></pre><p>实例实现：输出1-10</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+for((i=1;i&lt;=10;i++))
+do
+	echo $i
+done
+</code></pre><h3 id="while">while <a class="markdownIt-Anchor" href="#while">#</a></h3><p>特点：直到输入为非0才中止</p><pre class="hljs"><code>while [test测试为假时中止]
+do
+命令
+done
+</code></pre><p>实例实现：输出1-10</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+a=1 # 小于10
+while [ $a -lt 10 ]
+do
+((a++)); echo $a;
+done
+</code></pre><p>实现死循环</p><pre class="hljs"><code><span class="hljs-keyword">while</span> :; <span class="hljs-keyword">do</span> <span class="hljs-built_in">echo</span> ;<span class="hljs-keyword">done</span>
+</code></pre><h3 id="until">until <a class="markdownIt-Anchor" href="#until">#</a></h3><p>特点：与while相反，直到输入为0才中止</p><pre class="hljs"><code>until [test测试为真时中止]
+do
+命令
+done
+</code></pre><p>实例实现：输出1-10</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+while []
+do
+命令
+done
+</code></pre><h3 id="嵌套循环">嵌套循环 <a class="markdownIt-Anchor" href="#嵌套循环">#</a></h3><p>找出/etc/profile.d目录下所有可执行文件</p><pre class="hljs"><code><span class="hljs-keyword">for</span> sc_name <span class="hljs-keyword">in</span> /etc/profile.d/*.sh
+<span class="hljs-keyword">do</span>
+	<span class="hljs-built_in">echo</span> <span class="hljs-variable">$sc_name</span>
+<span class="hljs-keyword">done</span>
+</code></pre><p>找出/etc/profile.d目录下所有可执行文件并执行</p><pre class="hljs"><code>for sc_name in /Users/wzyan/Documents/selfspace/kkb-down/demo/for/test-x/*.sh; do
+    if [ -x $sc_name ]; then
+        . $sc_name
+    fi
+done
+</code></pre><h3 id="使用关键字break和continue">使用关键字break和continue <a class="markdownIt-Anchor" href="#使用关键字break和continue">#</a></h3><p>找出/etc/profile.d目录下所有可执行文件并执行</p><pre class="hljs"><code>for num in {1..9}
+do
+	echo $num
+done
+</code></pre><h2 id="实战处理命令行参数">实战：处理命令行参数 <a class="markdownIt-Anchor" href="#实战处理命令行参数">#</a></h2><ul><li>命令行参数可以使用$1 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2..</mn></mrow><annotation encoding="application/x-tex">2..</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mord">.</span><span class="mord">.</span></span></span></span>{10}..${n}进行读取</li><li>$0代表脚本名称</li><li>$* 和 $@代表所有位置参数</li><li>$#代表位置参数的数量</li></ul><pre class="hljs"><code><span class="hljs-keyword">for</span> pos <span class="hljs-keyword">in</span> $*; <span class="hljs-keyword">do</span>
+    <span class="hljs-keyword">if</span> [ <span class="hljs-string">&quot;<span class="hljs-variable">$pos</span>&quot;</span> = <span class="hljs-string">&quot;help&quot;</span> ]; <span class="hljs-keyword">then</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-variable">$pos</span>
+    <span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">done</span>
+</code></pre></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item chapter-item-current"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%B5%8B%E8%AF%95%E5%91%BD%E4%BB%A4%E5%AD%A6%E4%B9%A0%E5%88%86%E6%94%AF%E8%AF%AD%E5%8F%A5%E7%9A%84%E5%89%8D%E6%8F%90">测试命令（学习分支语句的前提）</a>\n<ul>\n<li><a href="#%E7%8A%B6%E6%80%81-%E5%92%8C-exit">状态：$? 和 exit</a></li>\n<li><a href="#%E5%91%BD%E4%BB%A4test">命令：test</a></li>\n</ul>\n</li>\n<li><a href="#%E5%88%86%E6%94%AF%E8%AF%AD%E5%8F%A5">分支语句</a>\n<ul>\n<li><a href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95%E5%9F%BA%E7%A1%80if">基本用法：基础if</a></li>\n<li><a href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95if-else">基本用法：if-else</a></li>\n<li><a href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95if-elif-else">基本用法：if-elif-else</a></li>\n<li><a href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95%E5%B5%8C%E5%A5%97if">基本用法：嵌套if</a></li>\n<li><a href="#case%E8%AF%AD%E5%8F%A5">case语句</a></li>\n</ul>\n</li>\n<li><a href="#%E5%BE%AA%E7%8E%AF%E8%AF%AD%E5%8F%A5">循环语句</a>\n<ul>\n<li><a href="#for%E5%BE%AA%E7%8E%AF">for循环</a></li>\n<li><a href="#c%E8%AF%AD%E8%A8%80%E9%A3%8E%E6%A0%BC%E7%9A%84for">c语言风格的for</a></li>\n<li><a href="#while">while</a></li>\n<li><a href="#until">until</a></li>\n<li><a href="#%E5%B5%8C%E5%A5%97%E5%BE%AA%E7%8E%AF">嵌套循环</a></li>\n<li><a href="#%E4%BD%BF%E7%94%A8%E5%85%B3%E9%94%AE%E5%AD%97break%E5%92%8Ccontinue">使用关键字break和continue</a></li>\n</ul>\n</li>\n<li><a href="#%E5%AE%9E%E6%88%98%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0">实战：处理命令行参数</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

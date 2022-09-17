@@ -1,0 +1,196 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 前言 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/index.html" class="breadcrumb-item">webpack插件训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/day4. 性能分析篇.html" class="breadcrumb-item">day4. 性能分析篇.md</a></div><h1 class="article-title"># 前言</h1><div class="article"><p>webpack是一款打包工具，功能集成各款插件，插件性能有好有坏，这也意味着一个webpack的配置有好有坏，性能分析就显得尤为重要了。</p><ul><li>基础分析：输出收集stats.json</li><li>速度分析：speed-measure-webpack-plugin</li><li>体积分析：webpack-bundle-analyzer</li></ul><p>我们来依次学习下如何实践。</p><h2 id="实战项目搭建">实战项目搭建 <a class="markdownIt-Anchor" href="#实战项目搭建">#</a></h2><p>纸上得来终觉浅，我们还是走实战路线，一步步实现我们想要的效果。但不同于直接发仓库链接，本文的实战项目要求被分享的同学能够知道项目为什么这么实现，文件内容目标是什么。</p><h3 id="项目目录结构">项目目录结构 <a class="markdownIt-Anchor" href="#项目目录结构">#</a></h3><p>既然是实战项目，我们现在先来搭建下框架，先找一个空目录，我们需要创建如下结构的测试项目</p><pre class="hljs"><code>.
+|-- src
+|   |-- index
+|   |   |-- index.html
+|   |   |-- index.js
+|-- webpack.conf.js
+|-- package.json
+</code></pre><p>简单介绍下</p><ul><li>src：项目源代码</li><li>webpack.conf.js：本次项目的webpack配置</li></ul><p>补充：一个个建目录太麻烦，推荐个人开发的vscode插件weiyi-tools，安装好后</p><ol><li>复制上面目录结构内容</li><li>在侧边栏自己想要的空目录处右键</li><li>找到【选中目录工具箱 - 根据tree结果生成目录】，点击</li></ol><p>效果如下</p><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3jbv2job8g217v0u0q56.gif" alt="2022-06-24 14.40.09" style="zoom:25%;"><h3 id="项目内容实现">项目内容实现 <a class="markdownIt-Anchor" href="#项目内容实现">#</a></h3><p>src/index.js</p><pre class="hljs"><code><span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react&#x27;</span>;
+<span class="hljs-keyword">import</span> ReactDOM <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react-dom&#x27;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Index</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">React</span>.<span class="hljs-title">Component</span> </span>{
+  <span class="hljs-function"><span class="hljs-title">render</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>HELLO <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>;
+  }
+}
+
+ReactDOM.render(<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Index</span> /&gt;</span></span>, <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&#x27;root&#x27;</span>));
+</code></pre><p>src/index.html</p><pre class="hljs"><code><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Document Title<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;root&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre><p>webpack.conf.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+<span class="hljs-keyword">const</span> glob = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;glob&quot;</span>);
+<span class="hljs-keyword">const</span> HtmlWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;html-webpack-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> MiniCssExtractPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;mini-css-extract-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> CleanWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;clean-webpack-plugin&quot;</span>);
+
+<span class="hljs-keyword">const</span> setMPA = <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">const</span> entry = {};
+  <span class="hljs-keyword">const</span> htmlWebpackPlugins = [];
+
+  <span class="hljs-keyword">const</span> entryFiles = glob.sync(path.join(__dirname, <span class="hljs-string">&quot;./src/*/index.js&quot;</span>));
+  <span class="hljs-built_in">Object</span>.keys(entryFiles).map(<span class="hljs-function">(<span class="hljs-params">index</span>) =&gt;</span> {
+    <span class="hljs-keyword">const</span> entryFile = entryFiles[index];
+    <span class="hljs-keyword">const</span> match = entryFile.match(<span class="hljs-regexp">/src\/(.*)\/index\.js/</span>);
+    <span class="hljs-keyword">const</span> pageName = match &amp;&amp; match[<span class="hljs-number">1</span>];
+    entry[pageName] = entryFile;
+    htmlWebpackPlugins.push(
+      <span class="hljs-keyword">new</span> HtmlWebpackPlugin({
+        <span class="hljs-attr">template</span>: path.join(__dirname, <span class="hljs-string">`src/<span class="hljs-subst">${pageName}</span>/index.html`</span>),
+        <span class="hljs-attr">filename</span>: <span class="hljs-string">`<span class="hljs-subst">${pageName}</span>.html`</span>,
+        <span class="hljs-attr">chunks</span>: [<span class="hljs-string">&quot;vendors&quot;</span>, pageName], <span class="hljs-comment">// 指定使用哪些chunks</span>
+        <span class="hljs-attr">inject</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">//自动将所有chunks注入到模板文件中来 默认是true</span>
+        <span class="hljs-attr">minify</span>: {
+          <span class="hljs-attr">html5</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">collapseWhitespace</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">preserveLineBreaks</span>: <span class="hljs-literal">false</span>,
+          <span class="hljs-attr">minifyCSS</span>: <span class="hljs-literal">true</span>,
+          <span class="hljs-attr">minifyJS</span>: <span class="hljs-literal">false</span>,
+          <span class="hljs-attr">removeComments</span>: <span class="hljs-literal">false</span>,
+        },
+      })
+    );
+  });
+  <span class="hljs-keyword">return</span> {
+    entry,
+    htmlWebpackPlugins,
+  };
+};
+<span class="hljs-keyword">const</span> { entry, htmlWebpackPlugins } = setMPA();
+<span class="hljs-built_in">module</span>.exports = {
+  <span class="hljs-attr">mode</span>: <span class="hljs-string">&quot;production&quot;</span>,
+  entry,
+  <span class="hljs-attr">output</span>: {
+    <span class="hljs-attr">path</span>: path.resolve(__dirname, <span class="hljs-string">&quot;./dist&quot;</span>),
+    <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name]_[chunkhash:8].js&quot;</span>,
+  },
+  <span class="hljs-attr">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.js$/</span>,
+        use: <span class="hljs-string">&quot;babel-loader&quot;</span>,
+      },
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.css$/</span>,
+        use: [
+          MiniCssExtractPlugin.loader,
+          <span class="hljs-string">&quot;css-loader&quot;</span>,
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;px2rem-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">remUnit</span>: <span class="hljs-number">75</span>, <span class="hljs-comment">// rem相对px转换的单位 1rem = 75px</span>
+              <span class="hljs-attr">remPrecision</span>: <span class="hljs-number">8</span>, <span class="hljs-comment">// 小数点后位数</span>
+            },
+          },
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;postcss-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">plugins</span>: <span class="hljs-function">() =&gt;</span> [
+                <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;autoprefixer&quot;</span>)({
+                  <span class="hljs-attr">overrideBrowserslist</span>: [<span class="hljs-string">&quot;last 2 version&quot;</span>, <span class="hljs-string">&quot;&gt;1%&quot;</span>, <span class="hljs-string">&quot;ios 7&quot;</span>],
+                }),
+              ],
+            },
+          },
+        ],
+      },
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.less/</span>,
+        use: [
+          MiniCssExtractPlugin.loader,
+          <span class="hljs-string">&quot;css-loader&quot;</span>,
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;px2rem-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">remUnit</span>: <span class="hljs-number">75</span>, <span class="hljs-comment">// rem相对px转换的单位 1rem = 75px</span>
+              <span class="hljs-attr">remPrecision</span>: <span class="hljs-number">8</span>, <span class="hljs-comment">// 小数点后位数</span>
+            },
+          },
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;postcss-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">plugins</span>: <span class="hljs-function">() =&gt;</span> [
+                <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;autoprefixer&quot;</span>)({
+                  <span class="hljs-attr">overrideBrowserslist</span>: [<span class="hljs-string">&quot;last 2 version&quot;</span>, <span class="hljs-string">&quot;&gt;1%&quot;</span>, <span class="hljs-string">&quot;ios 7&quot;</span>],
+                }),
+              ],
+            },
+          },
+          <span class="hljs-string">&quot;less-loader&quot;</span>,
+        ],
+      },
+      <span class="hljs-comment">// {</span>
+      <span class="hljs-comment">//   test: /.jpg|jpeg|gif|png$/,</span>
+      <span class="hljs-comment">//   use: &quot;file-loader&quot;,</span>
+      <span class="hljs-comment">// },</span>
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(png|jpg|gif|jpeg)$/</span>,
+        use: [
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;file-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">name</span>: <span class="hljs-string">&quot;[name]_[hash:8].[ext]&quot;</span>,
+            },
+          },
+        ],
+      },
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(woff|woff2|eot|ttf|otf)$/</span>,
+        use: [
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;file-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">limit</span>: <span class="hljs-number">1024000</span>,
+              <span class="hljs-attr">options</span>: {
+                <span class="hljs-attr">name</span>: <span class="hljs-string">&quot;[name]_[hash:8][ext]&quot;</span>,
+              },
+            },
+          },
+        ],
+      },
+    ],
+  },
+  <span class="hljs-attr">stats</span>: <span class="hljs-string">&quot;errors-only&quot;</span>,
+  <span class="hljs-attr">plugins</span>: [
+    ...htmlWebpackPlugins,
+    <span class="hljs-keyword">new</span> CleanWebpackPlugin(),
+    <span class="hljs-keyword">new</span> MiniCssExtractPlugin({
+      <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name]_[contenthash:8].css&quot;</span>,
+    })
+  ],
+};
+
+</code></pre><p>至此，我们的实战项目的框架也就搭建好啦！</p><h2 id="基础分析输出收集statsjson">基础分析：输出收集stats.json <a class="markdownIt-Anchor" href="#基础分析输出收集statsjson">#</a></h2><p><strong>期待目标：</strong>将webpack的打包结果输出的一个文件<code>stats.json</code>中，以供分析</p><p><strong>实现思路：</strong>这是webpack自身提供的能力，我们只需要添加一个打包命令就好。</p><p>找到package.json文件，在script中添加</p><pre class="hljs"><code>“script”: {
+   <span class="hljs-attr">&quot;build:stats&quot;</span>: <span class="hljs-string">&quot;webpack --json &gt; stats.json&quot;</span>
+}
+</code></pre><p><strong>实现效果</strong></p><p>执行<code>npm run build:stats</code>，会发现控制台输出的结果变少了很多，并且会在项目根目录创建一个<code>stats.json</code>，里面就是打包输出。</p><h2 id="速度分析speed-measure-webpack-plugin">速度分析：speed-measure-webpack-plugin <a class="markdownIt-Anchor" href="#速度分析speed-measure-webpack-plugin">#</a></h2><p><strong>期待目标：</strong>输出更详细的webpack处理信息 -- 将每个插件的处理时间输出</p><p><strong>实现思路：</strong> 借助webpack插件speed-measure-webpack-plugin</p><h5 id="安装依赖">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖">#</a></h5><pre class="hljs"><code>npm i speed-measure-webpack-plugin
+</code></pre><h5 id="在webpack中使用">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用">#</a></h5><p>webpack.conf.js中进行配置</p><pre class="hljs"><code><span class="hljs-keyword">const</span> SpeedMeasureWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;speed-measure-webpack-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> smp = <span class="hljs-keyword">new</span> SpeedMeasureWebpackPlugin();
+
+<span class="hljs-built_in">module</span>.export = smp.wrap({
+  ...
+})
+</code></pre><h5 id="配置命令">配置命令 <a class="markdownIt-Anchor" href="#配置命令">#</a></h5><p>找到package.json文件，在script中添加</p><pre class="hljs"><code>“script”: {
+   <span class="hljs-attr">&quot;build:speed-stats&quot;</span>: <span class="hljs-string">&quot;webpack&quot;</span>
+}
+</code></pre><p><strong>实现效果</strong></p><p>执行<code>npm run build:speed-stats</code>，会发现控制台输出的结果如下</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h4d7a5npdhj20yw0p0go9.jpg" alt=""><figcaption>image-20220624221617945</figcaption></figure><h2 id="体积分析webpack-bundle-analyzer">体积分析：webpack-bundle-analyzer <a class="markdownIt-Anchor" href="#体积分析webpack-bundle-analyzer">#</a></h2><p><strong>期待目标：</strong>输出更详细的webpack处理信息 -- 将每个插件的所占体积以图表的形式输出</p><p><strong>实现思路：</strong> 借助webpack插件</p><h5 id="安装依赖-1">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖-1">#</a></h5><pre class="hljs"><code>npm i webpack-bundle-analyzer
+</code></pre><h5 id="在webpack中使用-1">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用-1">#</a></h5><p>webpack.conf.js中进行配置</p><pre class="hljs"><code><span class="hljs-keyword">const</span> BundleAnalyzerPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;webpack-bundle-analyzer&quot;</span>).BundleAnalyzerPlugin;
+
+<span class="hljs-built_in">module</span>.export = {
+  <span class="hljs-attr">plugins</span>: [
+    <span class="hljs-keyword">new</span> BundleAnalyzerPlugin()
+  ]
+}
+</code></pre><h5 id="配置命令-1">配置命令 <a class="markdownIt-Anchor" href="#配置命令-1">#</a></h5><p>找到package.json文件，在script中添加</p><pre class="hljs"><code>“script”: {
+   <span class="hljs-attr">&quot;build:bundle-stats&quot;</span>: <span class="hljs-string">&quot;webpack&quot;</span>
+}
+</code></pre><p><strong>实现效果</strong></p><p>执行<code>npm run build:bundle-stats</code>，会发现控制台输出的结果如下（浏览器会自动唤起8888窗口）</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h4d7a6j28hj21gz0u0djn.jpg" alt=""><figcaption>image-20220625110406465</figcaption></figure></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../webpack插件训练营/day3. 文件类型处理篇.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../webpack插件训练营/day5. 性能优化篇：体积优化.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item chapter-item-current"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"webpack插件训练营/day4. 性能分析篇.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E5%AE%9E%E6%88%98%E9%A1%B9%E7%9B%AE%E6%90%AD%E5%BB%BA">实战项目搭建</a>\n<ul>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84">项目目录结构</a></li>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E5%86%85%E5%AE%B9%E5%AE%9E%E7%8E%B0">项目内容实现</a></li>\n</ul>\n</li>\n<li><a href="#%E5%9F%BA%E7%A1%80%E5%88%86%E6%9E%90%E8%BE%93%E5%87%BA%E6%94%B6%E9%9B%86statsjson">基础分析：输出收集stats.json</a></li>\n<li><a href="#%E9%80%9F%E5%BA%A6%E5%88%86%E6%9E%90speed-measure-webpack-plugin">速度分析：speed-measure-webpack-plugin</a></li>\n<li><a href="#%E4%BD%93%E7%A7%AF%E5%88%86%E6%9E%90webpack-bundle-analyzer">体积分析：webpack-bundle-analyzer</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

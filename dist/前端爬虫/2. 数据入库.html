@@ -1,0 +1,408 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：明确方向，以成果为导向 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/index.html" class="breadcrumb-item">前端爬虫</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/2. 数据入库.html" class="breadcrumb-item">2. 数据入库.md</a></div><h1 class="article-title"># 要做什么：明确方向，以成果为导向</h1><div class="article"><p>编写网络爬虫抓取掘金数据（掘金标签、文章、文章详情），并存储到MySQL数据库中</p><ol><li><p>mysql数据库服务</p><ul><li>数据入库：mysql + bluebird</li><li>navicat远程连接数据库</li><li>建表（如果是用笔者的服务器则可跳过）</li></ul></li><li><p>node服务搭建（基于express），提供触发爬取接口</p><ul><li>发起前端模拟浏览器请求获取网页内容：puppeteer</li><li>使用类似jQuery的语法来操作网页提取需要的数据：cheerio</li><li>把数据保存到数据库中以供查询：mysql</li></ul></li></ol><h3 id="实现效果">实现效果 <a class="markdownIt-Anchor" href="#实现效果">#</a></h3><p>爬取tag信息</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2upt8ulyug21ch0u0407.gif" alt=""><figcaption>2022-06-02 10.39.41</figcaption></figure><p>入库数据</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2upu91mf9j20yd0u00xf.jpg" alt=""><figcaption>image-20220603074616904</figcaption></figure><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="mysql数据库服务">mysql数据库服务 <a class="markdownIt-Anchor" href="#mysql数据库服务">#</a></h3><p>要建表，需搭建mysql服务，可参考个人文章（保姆级指南：centos安装mysql ）：<a href="https://juejin.cn/post/7104346481787666446/" target="_blank" rel="noopener">https://juejin.cn/post/7104346481787666446/</a></p><p>（</p><p>这步也可以不做，直接用我的数据库就成，如果是，那记得下面的远程连接就改成我的地址即可</p><ul><li>公网ip：82.157.62.28</li><li>密码：Wzyan123456</li></ul><p>）</p><h3 id="navicat远程连接数据库">navicat远程连接数据库 <a class="markdownIt-Anchor" href="#navicat远程连接数据库">#</a></h3><p>我们找个可视化工具来控制mysql，这里选用了navicat，破解版分享网盘如下</p><ul><li>mac版本</li></ul><pre class="hljs"><code>链接: https://pan.baidu.com/s/1RyTNoApa7MxkIDTtbQ2jkQ  密码: jfjl
+--来自百度网盘超级会员V4的分享
+</code></pre><ul><li>win版本</li></ul><pre class="hljs"><code>链接: https://pan.baidu.com/s/1WSxWm1eCqRnao9j8AGLQFQ  密码: gdv1
+--来自百度网盘超级会员V4的分享
+</code></pre><p>一路next即可，安装好后，连接刚刚搭建好的远程mysql，新建数据库<code>crawl-db</code>。</p><h3 id="建表如果是用笔者的服务器则可跳过">建表（如果是用笔者的服务器则可跳过） <a class="markdownIt-Anchor" href="#建表如果是用笔者的服务器则可跳过">#</a></h3><p>使用Navicat导入数据库</p><h5 id="先下载对应的数据库结构sql文件">先下载对应的数据库结构sql文件 <a class="markdownIt-Anchor" href="#先下载对应的数据库结构sql文件">#</a></h5><pre class="hljs"><code>链接: https://pan.baidu.com/s/12XVYjur54zz6eN9x-Ez9LA  密码: mhjj
+--来自百度网盘超级会员V4的分享
+</code></pre><h5 id="打开navicat-premium然后点击右键选择新建数据库名字跟我们要导入的数据库的名字一样">打开Navicat Premium，然后点击右键选择新建数据库，名字跟我们要导入的数据库的名字一样 <a class="markdownIt-Anchor" href="#打开navicat-premium然后点击右键选择新建数据库名字跟我们要导入的数据库的名字一样">#</a></h5><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2tdqav844j20co0b2wez.jpg" alt=""><figcaption>img</figcaption></figure><p>点击确定后，我们就可以见到左边出现刚刚我们建立好的数据库了，然后右击选择“运行SQL文件”会弹出一个框，点击“...”选择文件所在的路径，</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2tdqfaeskj20bk09ydgm.jpg" alt=""><figcaption>img</figcaption></figure><p>点击开始，文件就会导入成功！</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2toohnvffj20bk09yjs2.jpg" alt=""><figcaption>img</figcaption></figure><h3 id="node服务搭建">node服务搭建 <a class="markdownIt-Anchor" href="#node服务搭建">#</a></h3><ul><li><p>提供tag接口：请求时爬取掘金标签页，获取所有标签信息并入库tags表中</p><ul><li>read：利用puppetter爬取标签信息</li><li>write：写入数据库tag表中</li></ul></li><li><p>提供article接口：请求时爬取指定标签对应的掘金文章列表，获取所有文章即对应详情信息，并入库article、article-detail和article_tag表中</p><ul><li>查询：根据标签名查处理标签对应页面地址</li><li>read：利用puppetter爬取标签页信息</li><li>write：写入数据库articles表中，并将标签和文章对应关系写入中间表<code>article_tag</code>中</li></ul></li></ul><h5 id="入口文件serverjs">入口文件server.js <a class="markdownIt-Anchor" href="#入口文件serverjs">#</a></h5><p>我们先在仓库根目录下新建一个第二天实战的目录及文件<code>web/server.js</code>（在git bash中可以直接执行如下命令）</p><pre class="hljs"><code>mkdir web &amp;&amp; cd web &amp;&amp; touch server.js
+</code></pre><p>然后实现如下内容即可</p><pre class="hljs"><code><span class="hljs-keyword">let</span> express = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;express&quot;</span>);
+<span class="hljs-keyword">const</span> { query } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../db&quot;</span>);
+<span class="hljs-keyword">let</span> app = express();
+<span class="hljs-keyword">let</span> read = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./utils/read&quot;</span>);
+<span class="hljs-keyword">let</span> write = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./utils/write&quot;</span>);
+
+app.listen(<span class="hljs-number">8082</span>);
+app.post(<span class="hljs-string">&quot;/tag&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-comment">// 获取所有标签</span>
+  <span class="hljs-keyword">let</span> tagUrl = <span class="hljs-string">&quot;https://juejin.im/subscribe/all&quot;</span>;
+  <span class="hljs-comment">//读取掘金的标签列表</span>
+  <span class="hljs-keyword">let</span> tags = <span class="hljs-keyword">await</span> read.tags(tagUrl);
+  <span class="hljs-comment">// 把标签写到数据库中</span>
+  <span class="hljs-keyword">await</span> write.tags(tags);
+});
+
+app.post(<span class="hljs-string">&quot;/article&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-keyword">let</span> { tagName } = req.query;
+  <span class="hljs-keyword">let</span> tags = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM tags`</span>);
+  tags = tags.filter(<span class="hljs-function">(<span class="hljs-params">tag</span>) =&gt;</span> tag.name === tagName);
+  <span class="hljs-comment">// 根据标签获取所有的文章</span>
+  <span class="hljs-keyword">let</span> allAricles = {};
+  <span class="hljs-comment">// 标签有很多，不同的标签下面的文章可能会重复</span>
+  <span class="hljs-keyword">for</span> (tag <span class="hljs-keyword">of</span> tags) {
+    <span class="hljs-keyword">let</span> articles = <span class="hljs-keyword">await</span> read.articles(tag.href, <span class="hljs-number">1</span>);
+
+    articles.forEach(<span class="hljs-function">(<span class="hljs-params">article</span>) =&gt;</span> (allAricles[article.id] = article));
+  }
+  <span class="hljs-comment">// {id:article}</span>
+  <span class="hljs-keyword">await</span> write.articles(<span class="hljs-built_in">Object</span>.values(allAricles));
+});
+</code></pre><p>其中爬取数据和写入数据至数据库的实现放在<code>utils</code>中，目录结构如下</p><pre class="hljs"><code>├── domain-util.js
+├── puppeteer-utils.js
+├── read
+│   ├── article-detail.js
+│   ├── articles.js
+│   ├── index.js
+│   ├── tags.js
+└── write
+    ├── articles.js
+    ├── index.js
+    └── tags.js
+</code></pre><p>创建好后依次实现即可；</p><p>domain-util.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> URI = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;urijs&quot;</span>);
+
+<span class="hljs-comment">/**
+ * <span class="hljs-doctag">@param <span class="hljs-type">{Mixin}</span> </span>url 地址或 uri
+ */</span>
+<span class="hljs-keyword">const</span> getHostName = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">uri</span>) </span>{
+  uri = <span class="hljs-keyword">new</span> URI(uri);
+  <span class="hljs-keyword">return</span> uri.hostname();
+};
+<span class="hljs-built_in">module</span>.exports = {
+  getHostName,
+};
+</code></pre><p>puppeteer-utils.js</p><pre class="hljs"><code><span class="hljs-keyword">let</span> puppeteer = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;puppeteer&quot;</span>);
+<span class="hljs-keyword">const</span> cheerio = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;cheerio&quot;</span>);
+<span class="hljs-keyword">const</span> domainUtil = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./domain-util&quot;</span>);
+
+<span class="hljs-keyword">let</span> browser;
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getHTML</span>(<span class="hljs-params">uri, isAutoScrollToBottom = <span class="hljs-literal">true</span></span>) </span>{
+  <span class="hljs-keyword">let</span> page = <span class="hljs-keyword">await</span> openPage(uri);
+  <span class="hljs-comment">/** 自动滚动至页面底部，用于处理页面触底加载的情况
+   * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>page page对象
+   * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>interval 间隔请求时间，尽可能趋近【被爬页面触底加载请求接口】的返回时间，但一定不要小于，不然就会出现爬取不完整的情况
+   */</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">autoScrollToBottom</span>(<span class="hljs-params">page, interval = <span class="hljs-number">3000</span></span>) </span>{
+    <span class="hljs-comment">// Expose a function 这个用于客户端代码debugger 避免源码映射失效的情况 //# sourceURL=__puppeteer_evaluation_script_</span>
+    <span class="hljs-comment">// 解决方案来源：https://stackoverflow.com/questions/65584989/debug-in-chromium-puppeteer-doesnt-populate-evaluate-script</span>
+    <span class="hljs-comment">// 这个api原意是侦听页面中触发的自定义事件，可见文档https://www.qikegu.com/docs/4564</span>
+    page.exposeFunction(<span class="hljs-string">&quot;nothing&quot;</span>, <span class="hljs-function">() =&gt;</span> <span class="hljs-literal">null</span>);
+    <span class="hljs-comment">//   放在这里的函数会在客户端环境下执行 并且里面的内容和外层是隔绝的，这意味着外面的依赖、方法都不能使用</span>
+    <span class="hljs-keyword">await</span> page.evaluate(<span class="hljs-keyword">async</span> (...args) =&gt; {
+      <span class="hljs-keyword">await</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+        <span class="hljs-keyword">let</span> totalHeight = <span class="hljs-number">0</span>;
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exec</span>(<span class="hljs-params"></span>) </span>{
+          totalHeight = <span class="hljs-built_in">document</span>.body.scrollHeight;
+          <span class="hljs-comment">// 1. 滚动到底部</span>
+          <span class="hljs-built_in">window</span>.scrollBy(<span class="hljs-number">0</span>, totalHeight);
+          <span class="hljs-comment">// 2. 等待10s判断页面高度有无变化</span>
+          <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function">() =&gt;</span> {
+            <span class="hljs-comment">// 1. 变化了，则重复行为</span>
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">document</span>.body.scrollHeight &gt; totalHeight) {
+              exec();
+            } <span class="hljs-keyword">else</span> {
+              <span class="hljs-comment">//   2. 没变化，则结束行为</span>
+              resolve();
+            }
+          }, <span class="hljs-number">3000</span>);
+        }
+        exec();
+      });
+    });
+  }
+  <span class="hljs-keyword">if</span> (isAutoScrollToBottom) {
+    <span class="hljs-keyword">await</span> autoScrollToBottom(page);
+  }
+  <span class="hljs-comment">// 获取页面完整dom</span>
+  <span class="hljs-keyword">let</span> sum = <span class="hljs-keyword">await</span> page.content();
+  <span class="hljs-keyword">const</span> $ = cheerio.load(sum);
+  <span class="hljs-keyword">return</span> $;
+}
+<span class="hljs-comment">/** 打开一个无头浏览器
+ *
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">opts</span></span>
+ * <span class="hljs-doctag">@returns</span>
+ */</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getPage</span>(<span class="hljs-params">
+  opts = {
+    headless: <span class="hljs-literal">false</span>,
+    devtools: <span class="hljs-literal">true</span>,
+  }
+</span>) </span>{
+  <span class="hljs-keyword">if</span> (!browser) {
+    browser = <span class="hljs-keyword">await</span> puppeteer.launch(opts);
+  }
+  <span class="hljs-comment">// 打开一个空白页</span>
+  <span class="hljs-keyword">let</span> page = <span class="hljs-keyword">await</span> browser.newPage();
+  <span class="hljs-keyword">return</span> page;
+}
+<span class="hljs-comment">/** 打开一个无头浏览器 并跳转至指定地址
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">uri</span></span>
+ * <span class="hljs-doctag">@returns </span>page对象
+ */</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">openPage</span>(<span class="hljs-params">
+  uri,
+  opts = {
+    headless: <span class="hljs-literal">false</span>,
+    devtools: <span class="hljs-literal">true</span>,
+  }
+</span>) </span>{
+  <span class="hljs-keyword">let</span> page = <span class="hljs-keyword">await</span> getPage(opts);
+  <span class="hljs-comment">//设置页面打开时的页面宽度高度</span>
+  <span class="hljs-comment">//   await page.setViewport({</span>
+  <span class="hljs-comment">//     width: 1920,</span>
+  <span class="hljs-comment">//     height: 1080,</span>
+  <span class="hljs-comment">//   });</span>
+  <span class="hljs-comment">// 在地址栏中输入百度的地址</span>
+  <span class="hljs-keyword">await</span> page.goto(uri, {
+    <span class="hljs-attr">waitUntil</span>: <span class="hljs-string">&quot;networkidle2&quot;</span>,
+  });
+  <span class="hljs-keyword">return</span> page;
+}
+<span class="hljs-comment">/** 为页面对象添加cookies
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">cookies</span></span>
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">page</span></span>
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">domain</span></span>
+ */</span>
+<span class="hljs-keyword">const</span> addCookies = <span class="hljs-keyword">async</span> (page, cookies, domain) =&gt; {
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> cookies === <span class="hljs-string">&quot;string&quot;</span>) {
+    cookies = cookies.split(<span class="hljs-string">&quot;;&quot;</span>).map(<span class="hljs-function">(<span class="hljs-params">pair</span>) =&gt;</span> {
+      <span class="hljs-keyword">let</span> name = pair.trim().slice(<span class="hljs-number">0</span>, pair.trim().indexOf(<span class="hljs-string">&quot;=&quot;</span>));
+      <span class="hljs-keyword">let</span> value = pair.trim().slice(pair.trim().indexOf(<span class="hljs-string">&quot;=&quot;</span>) + <span class="hljs-number">1</span>);
+      <span class="hljs-keyword">return</span> { name, value, domain };
+    });
+  }
+  <span class="hljs-keyword">await</span> <span class="hljs-built_in">Promise</span>.all(
+    cookies.map(<span class="hljs-function">(<span class="hljs-params">pair</span>) =&gt;</span> {
+      <span class="hljs-keyword">return</span> page.setCookie(pair);
+    })
+  );
+};
+<span class="hljs-comment">/**
+ *
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">url</span></span>
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>cookies 自己的cookies 支持数组和字符串形式
+ */</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">login</span>(<span class="hljs-params">url, cookies</span>) </span>{
+  <span class="hljs-keyword">let</span> page = <span class="hljs-keyword">await</span> getPage({
+    <span class="hljs-attr">ignoreHTTPSErrors</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">headless</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">args</span>: [<span class="hljs-string">&quot;--no-sandbox&quot;</span>, <span class="hljs-string">&quot;--disable-setuid-sandbox&quot;</span>],
+  });
+  <span class="hljs-comment">// const ps = await browser.pages();</span>
+  <span class="hljs-comment">// await ps[0].close();</span>
+  <span class="hljs-keyword">await</span> addCookies(page, cookies, domainUtil.getHostName(url)); <span class="hljs-comment">//云盘域名</span>
+  <span class="hljs-keyword">await</span> page.setViewport({
+    <span class="hljs-comment">//修改浏览器视窗大小</span>
+    <span class="hljs-attr">width</span>: <span class="hljs-number">1920</span>,
+    <span class="hljs-attr">height</span>: <span class="hljs-number">1080</span>,
+  });
+  <span class="hljs-keyword">await</span> page.goto(url, {
+    <span class="hljs-attr">timeout</span>: <span class="hljs-number">600000</span>,
+    <span class="hljs-attr">waitUntil</span>: <span class="hljs-string">&quot;networkidle2&quot;</span>,
+  });
+  <span class="hljs-keyword">return</span> page;
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">click</span>(<span class="hljs-params">page, select</span>) </span>{
+  <span class="hljs-keyword">await</span> page.waitForSelector(select);
+  <span class="hljs-keyword">let</span> node = <span class="hljs-keyword">await</span> page.$(select);
+  node.click();
+}
+<span class="hljs-built_in">module</span>.exports = {
+  getHTML,
+  openPage,
+  login,
+  click,
+};
+</code></pre><p>reead/index.js</p><pre class="hljs"><code><span class="hljs-keyword">let</span> { tags } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./tags&quot;</span>);
+<span class="hljs-keyword">let</span> { articles } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./articles&quot;</span>);
+<span class="hljs-built_in">module</span>.exports = {
+  tags,
+  articles,
+};
+</code></pre><p>read/tags.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;juejin:task:read&quot;</span>);
+<span class="hljs-keyword">const</span> puppeteerUtils = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../puppeteer-utils&quot;</span>);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">get</span>(<span class="hljs-params">owner, props</span>) </span>{
+  <span class="hljs-keyword">if</span> (owner) {
+    <span class="hljs-keyword">return</span> owner[props];
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span>;
+  }
+}
+
+<span class="hljs-built_in">exports</span>.tags = <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">uri</span>) </span>{
+  debug(<span class="hljs-string">&quot;读取文章标签列表&quot;</span>);
+  <span class="hljs-keyword">let</span> $ = <span class="hljs-keyword">await</span> puppeteerUtils.getHTML(uri);
+  <span class="hljs-keyword">let</span> tags = [];
+
+  <span class="hljs-keyword">let</span> domTags = $(<span class="hljs-string">&quot;li.item&quot;</span>);
+  domTags.each(<span class="hljs-function">(<span class="hljs-params">i, item</span>) =&gt;</span> {
+    <span class="hljs-keyword">let</span> tag = $(item);
+    <span class="hljs-keyword">let</span> image = tag.find(<span class="hljs-string">&quot;img.thumb&quot;</span>).first();
+    <span class="hljs-keyword">let</span> title = tag.find(<span class="hljs-string">&quot;.title&quot;</span>).first();
+    <span class="hljs-keyword">let</span> subscribe = tag.find(<span class="hljs-string">&quot;.subscribe&quot;</span>).first();
+    <span class="hljs-keyword">let</span> article = tag.find(<span class="hljs-string">&quot;.article&quot;</span>).first();
+    <span class="hljs-keyword">let</span> name = title.text().trim();
+    tags.push({
+      <span class="hljs-attr">image</span>: image.data(<span class="hljs-string">&quot;src&quot;</span>) ? image.data(<span class="hljs-string">&quot;src&quot;</span>).trim() : image.data(<span class="hljs-string">&quot;src&quot;</span>),
+      name,
+      <span class="hljs-attr">url</span>: <span class="hljs-string">`https://juejin.im/tag/<span class="hljs-subst">${<span class="hljs-built_in">encodeURIComponent</span>(title.text().trim())}</span>`</span>,
+      <span class="hljs-attr">subscribe</span>: get(<span class="hljs-built_in">Number</span>(subscribe.text().match(<span class="hljs-regexp">/(\d+)/</span>), [<span class="hljs-number">1</span>])),
+      <span class="hljs-attr">article</span>: get(<span class="hljs-built_in">Number</span>(article.text().match(<span class="hljs-regexp">/(\d+)/</span>), [<span class="hljs-number">1</span>])),
+    });
+    debug(<span class="hljs-string">`读取文章标签:<span class="hljs-subst">${name}</span>`</span>);
+  });
+  <span class="hljs-keyword">return</span> tags.filter(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> item.name);
+};
+</code></pre><p>read/article-detail.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;juejin:task:read-detail&quot;</span>);
+<span class="hljs-keyword">const</span> puppeteerUtils = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../puppeteer-utils&quot;</span>);
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">readArticle</span>(<span class="hljs-params">id, uri</span>) </span>{
+  debug(<span class="hljs-string">&quot;读取博文&quot;</span>);
+  <span class="hljs-keyword">let</span> $ = <span class="hljs-keyword">await</span> puppeteerUtils.getHTML(uri, <span class="hljs-literal">false</span>);
+  <span class="hljs-keyword">let</span> article = $(<span class="hljs-string">&quot;.main-container&quot;</span>);
+  <span class="hljs-keyword">let</span> title = article.find(<span class="hljs-string">&quot;h1&quot;</span>).text().trim();
+  <span class="hljs-keyword">let</span> content = article.find(<span class="hljs-string">&quot;.article-content&quot;</span>).html();
+  <span class="hljs-comment">// let tags = article.find(&quot;.tag-list-box&gt;div.tag-list .tag-title&quot;);</span>
+  <span class="hljs-comment">// tags = tags.map((index, item) =&gt; {</span>
+  <span class="hljs-comment">//   let href = $(item).attr(&quot;href&quot;);</span>
+  <span class="hljs-comment">//   return href ? href.slice(4) : href;</span>
+  <span class="hljs-comment">// });</span>
+  <span class="hljs-keyword">let</span> tags;
+  <span class="hljs-comment">// 获取yuan</span>
+  <span class="hljs-keyword">let</span> metas = article.find(<span class="hljs-string">&quot;meta&quot;</span>);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> index = <span class="hljs-number">0</span>; index &lt; metas.length; index++) {
+    <span class="hljs-keyword">const</span> meta = metas[index];
+    <span class="hljs-keyword">if</span> (meta.attribs &amp;&amp; meta.attribs.itemprop === <span class="hljs-string">&quot;keywords&quot;</span>) {
+      tags = meta.attribs.content;
+    }
+  }
+
+  tags = tags.split(<span class="hljs-string">&quot;,&quot;</span>);
+  debug(<span class="hljs-string">`读取文章详情:<span class="hljs-subst">${title}</span>`</span>);
+  <span class="hljs-keyword">return</span> {
+    id,
+    title,
+    content,
+    tags,
+  };
+}
+
+<span class="hljs-built_in">module</span>.exports = {
+  readArticle,
+};
+</code></pre><p>read/article.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;juejin:task:read&quot;</span>);
+<span class="hljs-keyword">const</span> puppeteerUtils = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../puppeteer-utils&quot;</span>);
+<span class="hljs-keyword">const</span> { readArticle } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./article-detail&quot;</span>);
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">removeEmoji</span>(<span class="hljs-params">content</span>) </span>{
+  <span class="hljs-keyword">return</span> (content || <span class="hljs-string">&quot;&quot;</span>).replace(
+    <span class="hljs-regexp">/(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|\ud83c[\ude32-\ude3a]|\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/g</span>,
+    <span class="hljs-string">&quot;&quot;</span>
+  );
+}
+
+<span class="hljs-built_in">exports</span>.articles = <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">uri, maxNum = <span class="hljs-number">0</span></span>) </span>{
+  <span class="hljs-keyword">let</span> $ = <span class="hljs-keyword">await</span> puppeteerUtils.getHTML(uri, <span class="hljs-literal">false</span>);
+  <span class="hljs-keyword">let</span> articleList = [];
+  <span class="hljs-keyword">let</span> items = $(<span class="hljs-string">&quot;.item .title&quot;</span>);
+  <span class="hljs-keyword">let</span> articleNum = maxNum || items.length;
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; articleNum; i++) {
+    <span class="hljs-keyword">let</span> article = $(items[i]);
+    <span class="hljs-keyword">let</span> href = article.attr(<span class="hljs-string">&quot;href&quot;</span>).trim();
+    <span class="hljs-keyword">let</span> title = article.text().trim();
+    <span class="hljs-keyword">let</span> id = href.match(<span class="hljs-regexp">/\/(\w+)$/</span>)[<span class="hljs-number">1</span>];
+    href = <span class="hljs-string">&quot;https://juejin.im&quot;</span> + href;
+    <span class="hljs-keyword">let</span> articleDetail = <span class="hljs-keyword">await</span> readArticle(id, href);
+    articleList.push({
+      href,
+      <span class="hljs-attr">title</span>: removeEmoji(title),
+      id,
+      <span class="hljs-attr">content</span>: removeEmoji(articleDetail.content),
+      <span class="hljs-attr">tags</span>: articleDetail.tags,
+    });
+    debug(<span class="hljs-string">`读取文章列表:<span class="hljs-subst">${title}</span>`</span>);
+  }
+  <span class="hljs-keyword">return</span> articleList;
+};
+</code></pre><p>write/index.js</p><pre class="hljs"><code><span class="hljs-keyword">let</span> { tags } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./tags&quot;</span>);
+<span class="hljs-keyword">let</span> { articles } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./articles&quot;</span>);
+<span class="hljs-built_in">module</span>.exports = {
+  tags,
+  articles,
+};
+</code></pre><p>write/tags.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> { query, end } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../../../db&quot;</span>);
+<span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;juejin:task:write&quot;</span>);
+<span class="hljs-built_in">exports</span>.tags = <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">tagList</span>) </span>{
+  debug(<span class="hljs-string">&quot;保存文章标签列表&quot;</span>);
+  <span class="hljs-comment">// 这里在表设计中新增了一个索引，用于确定tag名称唯一</span>
+  <span class="hljs-keyword">for</span> (tag <span class="hljs-keyword">of</span> tagList) {
+    <span class="hljs-keyword">let</span> oldTags = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM tags WHERE name=? LIMIT 1 `</span>, [
+      tag.name,
+    ]);
+    <span class="hljs-comment">// oldTags = JSON.parse(JSON.stringify(oldTags));</span>
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(oldTags) &amp;&amp; oldTags.length &gt; <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">let</span> oldTag = oldTags[<span class="hljs-number">0</span>];
+      <span class="hljs-keyword">await</span> query(<span class="hljs-string">`UPDATE tags SET name=?,image=?,url=? WHERE id=?`</span>, [
+        tag.name,
+        tag.image,
+        tag.url,
+        oldTag.id,
+      ]);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">await</span> query(<span class="hljs-string">`INSERT INTO tags(name,image,url) VALUES(?,?,?)`</span>, [
+        tag.name,
+        tag.image,
+        tag.url,
+      ]);
+    }
+  }
+};
+</code></pre><p>write/articles.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> { query, end } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../../../db&quot;</span>);
+<span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;juejin:task:write&quot;</span>);
+<span class="hljs-keyword">const</span> sendMail = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../../../mail&quot;</span>);
+<span class="hljs-built_in">exports</span>.articles = <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">articleList</span>) </span>{
+  debug(<span class="hljs-string">&quot;写入博文列表&quot;</span>);
+  <span class="hljs-keyword">for</span> (article <span class="hljs-keyword">of</span> articleList) {
+    <span class="hljs-keyword">let</span> oldArticles = <span class="hljs-keyword">await</span> query(
+      <span class="hljs-string">`SELECT * FROM articles WHERE id=? LIMIT 1 `</span>,
+      article.id
+    );
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(oldArticles) &amp;&amp; oldArticles.length &gt; <span class="hljs-number">0</span>) {
+      <span class="hljs-keyword">let</span> oldArticle = oldArticles[<span class="hljs-number">0</span>];
+      <span class="hljs-keyword">await</span> query(<span class="hljs-string">`UPDATE articles SET title=?,content=?,href=? WHERE id=?`</span>, [
+        article.title,
+        article.content,
+        article.href,
+        oldArticle.id,
+      ]);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">await</span> query(
+        <span class="hljs-string">`INSERT INTO articles(id,title,href,content) VALUES(?,?,?,?)`</span>,
+        [article.id, article.title, article.href, article.content]
+      );
+    }
+
+    <span class="hljs-comment">//   先全部删除</span>
+    <span class="hljs-keyword">await</span> query(<span class="hljs-string">`DELETE FROM article_tag WHERE article_id=? `</span>, [article.id]);
+    <span class="hljs-keyword">const</span> where = <span class="hljs-string">&quot;(&#x27;&quot;</span> + article.tags.join(<span class="hljs-string">&quot;&#x27;,&#x27;&quot;</span>) + <span class="hljs-string">&quot;&#x27;)&quot;</span>;
+    <span class="hljs-keyword">const</span> sql = <span class="hljs-string">`SELECT id FROM tags WHERE name IN <span class="hljs-subst">${where}</span>`</span>;
+    <span class="hljs-keyword">let</span> tagIds = <span class="hljs-keyword">await</span> query(sql);
+    <span class="hljs-comment">// 再全部插入</span>
+    <span class="hljs-keyword">for</span> (row <span class="hljs-keyword">of</span> tagIds) {
+      <span class="hljs-keyword">await</span> query(<span class="hljs-string">`INSERT INTO article_tag(article_id,tag_id) VALUES(?,?)`</span>, [
+        article.id,
+        row.id,
+      ]);
+    }
+    <span class="hljs-keyword">let</span> tagIDsString = tagIds.map(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> item.id).join(<span class="hljs-string">&quot;,&quot;</span>);
+
+    <span class="hljs-comment">// 在此，向所有订阅了此标签的用户发送邮件</span>
+    <span class="hljs-keyword">let</span> emailSQL = <span class="hljs-string">`
+      SELECT DISTINCT users.email from user_tag INNER JOIN users ON user_tag.user_id = user_id WHERE tag_id IN (<span class="hljs-subst">${tagIDsString}</span>)
+    `</span>;
+    <span class="hljs-keyword">let</span> emails = <span class="hljs-keyword">await</span> query(emailSQL);
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> index = <span class="hljs-number">0</span>; index &lt; emails.length; index++) {
+      <span class="hljs-keyword">const</span> emailInfo = emails[index];
+      sendMail(
+        emailInfo.email,
+        <span class="hljs-string">`
+        您订阅的文章更新了
+      `</span>,
+        <span class="hljs-string">`&lt;a href=&quot;http:localhost:8080/detail/<span class="hljs-subst">${article.id}</span>&quot;&gt;<span class="hljs-subst">${article.title}</span>&lt;/a&gt;`</span>
+      );
+    }
+  }
+};
+</code></pre><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../前端爬虫/1. 了解爬虫 - puppetter实战.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../前端爬虫/3. 展示应用实现.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item chapter-item-current"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"前端爬虫/2. 数据入库.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li>\n<ul>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E6%95%88%E6%9E%9C">实现效果</a></li>\n</ul>\n</li>\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9C%8D%E5%8A%A1">mysql数据库服务</a></li>\n<li><a href="#navicat%E8%BF%9C%E7%A8%8B%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93">navicat远程连接数据库</a></li>\n<li><a href="#%E5%BB%BA%E8%A1%A8%E5%A6%82%E6%9E%9C%E6%98%AF%E7%94%A8%E7%AC%94%E8%80%85%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%88%99%E5%8F%AF%E8%B7%B3%E8%BF%87">建表（如果是用笔者的服务器则可跳过）</a></li>\n<li><a href="#node%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA">node服务搭建</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

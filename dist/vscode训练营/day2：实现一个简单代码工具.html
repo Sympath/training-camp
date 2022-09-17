@@ -1,0 +1,68 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：实现一个简单代码工具 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/index.html" class="breadcrumb-item">vscode训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/day2：实现一个简单代码工具.html" class="breadcrumb-item">day2：实现一个简单代码工具.md</a></div><h1 class="article-title"># 要做什么：实现一个简单代码工具</h1><div class="article"><p>完成一个简单插件，功能是 使用快捷键 或者鼠标右键选项，就能把选中的内容在下一行用console输出</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2uroibc0hg20yq0cqdgy.gif" alt=""><figcaption>2022-06-03 08.48.42</figcaption></figure><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="一在packagejson中注册激活命令">一、在package.json中注册激活命令 <a class="markdownIt-Anchor" href="#一在packagejson中注册激活命令">#</a></h3><h5 id="取一个名字">取一个名字 <a class="markdownIt-Anchor" href="#取一个名字">#</a></h5><p>command的名字一般是[插件名称(自取).[具体名称]，这里我就叫做 <code>firstExt.insertLog</code>；这时我们在contributes里面的commands写入名字和title（title可设为中文，在配置后会展示在鼠标右键选项里）</p><pre class="hljs"><code>		&quot;commands&quot;: [
+			{
+				&quot;command&quot;: &quot;firstExt.hello&quot;,
+				&quot;title&quot;: &quot;Hello World&quot;
+			},
+			{
+				&quot;command&quot;: &quot;firstExt.insertLog&quot;,
+				&quot;title&quot;: &quot;Insert Log Statement&quot;
+			}
+		],
+</code></pre><h5 id="将命令注册到activationevents激活事件">将命令注册到activationEvents（激活事件） <a class="markdownIt-Anchor" href="#将命令注册到activationevents激活事件">#</a></h5><p>激活事件发生时，该扩展插件将被激活。下面是官方提供的激活时机，如果设置为*，那么插件就会一直处在激活状态在后台运行。</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2iodih42pj20a709rgly.jpg" alt=""><figcaption>Alt text</figcaption></figure><p>在这个例子中，我们使用onCommand来激活插件，这样该命令可以被快捷键等执行，从而激活插件逻辑</p><pre class="hljs"><code>	&quot;activationEvents&quot;: [
+		&quot;onCommand:firstExt.hello&quot;,
+		&quot;onCommand:firstExt.insertLog&quot;
+	],
+</code></pre><h5 id="添加快捷键">添加快捷键 <a class="markdownIt-Anchor" href="#添加快捷键">#</a></h5><p>我们在contributes里的keybindings写入自定义的快捷键</p><pre class="hljs"><code>		&quot;keybindings&quot;: [
+			{
+				&quot;command&quot;: &quot;firstExt.hello&quot;,
+				&quot;key&quot;: &quot;ctrl+e&quot;,
+				&quot;mac&quot;: &quot;cmd+shift+e&quot;,
+			},
+			{
+				&quot;command&quot;: &quot;firstExt.insertLog&quot;,
+				&quot;key&quot;: &quot;shift+ctrl+l&quot;,
+				&quot;mac&quot;: &quot;shift+cmd+l&quot;,
+				// 只有在编辑器中的文本具有焦点（光标闪烁）执行
+				&quot;when&quot;: &quot;editorTextFocus&quot;
+			}
+		],
+</code></pre><h5 id="添加为鼠标右键选项">添加为鼠标右键选项 <a class="markdownIt-Anchor" href="#添加为鼠标右键选项">#</a></h5><p>我们在contributes =&gt; menus =&gt; editor/context里面添加右键选项</p><pre class="hljs"><code>		&quot;menus&quot;: {
+			&quot;editor/context&quot;: [
+				{
+					&quot;when&quot;: &quot;editorTextFocus&quot;,
+					&quot;command&quot;: &quot;firstExt.insertLog&quot;,
+					// 右键选项中出现的顺序
+					&quot;group&quot;: &quot;navigation&quot;
+				}
+			]
+		}
+</code></pre><p>该编辑器鼠标右键菜单中有这些默认组group：</p><ul><li>navigation-navigation在所有情况下都排在第一位。</li><li>1_modification -接下来是该组，其中包含用于修改代码的命令。</li><li>9_cutcopypaste -使用基本编辑命令的是倒数第二个默认组。</li><li>z_commands -最后一个默认组，其中包含用于打开命令面板的条目。</li></ul><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2iodk29wmj20hc07jt9i.jpg" alt=""><figcaption>Alt text</figcaption></figure><p>（我们也可以自定义添加几个菜单组)</p><h3 id="二调用命令">二、调用命令 <a class="markdownIt-Anchor" href="#二调用命令">#</a></h3><p>Extension.js是插件的入口，一般包括两个函数</p><ul><li>activate ：插件激活时也就是在注册的 Activation Event 发生的时候就会执行</li><li>deactivate。插件关闭时执行的代码。</li></ul><p>下面我们在extension.js中的activate中书写逻辑</p><pre class="hljs"><code>export function activate(context: vscode.ExtensionContext) {  
+// 注册命令名和对应的回调函数
+    const insertLog = vscode.commands.registerCommand('firstExt.insertLog', () =&gt; {
+	    // 拿到当前编辑页面的内容对象 editor
+        const editor = vscode.window.activeTextEditor;
+        // 拿到光标选中的文本并格式化
+        const selection = editor.selection;
+        const text = editor.document.getText(selection);
+        // 在这里拼写console语句
+		const logToInsert = `console.log('${text}: ',${text});\n`;
+		// 执行插行方法
+		text ? insertText(logToInsert) : insertText('console.log();');
+    });
+    // 最后，我们把注册的命令事件放入上下文的订阅中 
+    context.subscriptions.push(insertLog);
+}
+</code></pre><p>registerCommand完整的 API 是：registerCommand(command: string, callback: (args: any[]) =&gt; any, thisArg?: any): Disposable<br>主要功能是给功能代码(callback)注册一个命令(command)，然后通过 subscriptions.push() 给插件订阅对应的 command 事件。</p><h3 id="三具体逻辑">三、具体逻辑 <a class="markdownIt-Anchor" href="#三具体逻辑">#</a></h3><h4 id="文件编辑方法">文件编辑方法 <a class="markdownIt-Anchor" href="#文件编辑方法">#</a></h4><ul><li>editBuilder中的insert、delete和replace方法</li></ul><p>我们在编辑页面时有3个方法：insert、delete和replace。顾名思义，不展开了。</p><h4 id="当前位置和区域">当前位置和区域 <a class="markdownIt-Anchor" href="#当前位置和区域">#</a></h4><blockquote><p>vscode.Position 与 vscode.Range</p></blockquote><p>vscode.Position是一个坐标，传入行数和列数（char）；</p><p>vscode.Range是由两个vscode.Position确定头尾后的一块区域。</p><pre class="hljs"><code>const insertText = (val) =&gt; {
+    const editor = vscode.window.activeTextEditor;
+    const selection = editor.selection;
+    // 获取光标当前行
+    const lineOfSelectedVar = selection.active.line;
+	// edit方法获取editBuilder实例，在后一行添加
+    editor.edit((editBuilder) =&gt; {
+		editBuilder.insert(new vscode.Position(lineOfSelectedVar + 1, 0),val)
+	});
+}
+</code></pre><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2><p>1.对console使用css，增加console图形样式、颜色的个性化，发挥创造力</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2iodkptoyj20n402zjro.jpg" alt=""><figcaption>Alt text</figcaption></figure><p>2.根据选中文本输出不同的类型，如检测到err或者error，就用console.error输出，检测到数组中括号，用console.tabel输出</p><p>3.（稍难）添加console.time的应用场景，选中大段代码后，使用特定快捷键，在代码段前后增加console.time和console.timeEnd统计代码执行时间</p></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../vscode训练营/day1：简单了解插件开发.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../vscode训练营/day3：vscode配置文件.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item chapter-item-current"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"vscode训练营/day2：实现一个简单代码工具.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#%E4%B8%80%E5%9C%A8packagejson%E4%B8%AD%E6%B3%A8%E5%86%8C%E6%BF%80%E6%B4%BB%E5%91%BD%E4%BB%A4">一、在package.json中注册激活命令</a></li>\n<li><a href="#%E4%BA%8C%E8%B0%83%E7%94%A8%E5%91%BD%E4%BB%A4">二、调用命令</a></li>\n<li><a href="#%E4%B8%89%E5%85%B7%E4%BD%93%E9%80%BB%E8%BE%91">三、具体逻辑</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

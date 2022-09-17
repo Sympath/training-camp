@@ -1,0 +1,303 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：明确方向，以成果为导向 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/index.html" class="breadcrumb-item">前端爬虫</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/3. 展示应用实现.html" class="breadcrumb-item">3. 展示应用实现.md</a></div><h1 class="article-title"># 要做什么：明确方向，以成果为导向</h1><div class="article"><p>将爬取到的数据在一个web应用中展示；包含</p><p>node服务功能扩展（基于express）</p><ul><li>支持静态资源请求：express.static</li><li>支持post文件上传请求：body-parser</li><li>支持登陆态：express-session</li><li>渲染引擎：ejs</li></ul><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2ur6nij9xj215o0q8gpx.jpg" alt=""><figcaption>img</figcaption></figure><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="node服务搭建">node服务搭建 <a class="markdownIt-Anchor" href="#node服务搭建">#</a></h3><ul><li>路由搭建<ul><li>页面接口：首页（/）、登陆</li><li>（/login）、文章详情页（/detail/:id）、订阅页（/subscribe）</li><li>数据接口：提交登陆（/login）、提交订阅（/subscribe）</li></ul></li><li>页面实现</li><li>鉴权中间件实现</li></ul><h5 id="路由搭建入口文件serverjs">路由搭建：入口文件server.js <a class="markdownIt-Anchor" href="#路由搭建入口文件serverjs">#</a></h5><p>实现如下内容即可</p><pre class="hljs"><code><span class="hljs-keyword">let</span> express = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;express&quot;</span>);
+<span class="hljs-keyword">let</span> bodyParser = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;body-parser&quot;</span>);
+<span class="hljs-keyword">let</span> session = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;express-session&quot;</span>);
+<span class="hljs-keyword">let</span> { checkLogin } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;./middleware/auth&quot;</span>);
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+<span class="hljs-keyword">const</span> { query } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;../db&quot;</span>);
+<span class="hljs-keyword">const</span> CronJob = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;cron&quot;</span>).CronJob;
+<span class="hljs-keyword">const</span> debug = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;debug&quot;</span>)(<span class="hljs-string">&quot;crawl:server&quot;</span>);
+<span class="hljs-keyword">const</span> { spawn } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;child_process&quot;</span>);
+<span class="hljs-keyword">let</span> app = express();
+app.use(express.static(<span class="hljs-string">&quot;web/public&quot;</span>));
+app.use(
+  bodyParser.urlencoded({
+    <span class="hljs-attr">extends</span>: <span class="hljs-literal">true</span>,
+  })
+);
+app.use(bodyParser.json());
+app.use(
+  session({
+    <span class="hljs-attr">resave</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// 每次都要重新保存session</span>
+    <span class="hljs-attr">saveUninitialized</span>: <span class="hljs-literal">true</span>, <span class="hljs-comment">// 保存未初始化的session</span>
+    <span class="hljs-attr">secret</span>: <span class="hljs-string">&quot;wzyan&quot;</span>, <span class="hljs-comment">// 指定密钥</span>
+  })
+);
+app.use(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res, next</span>) </span>{
+  res.locals.user = req.session.user;
+  next();
+});
+app.set(<span class="hljs-string">&quot;view engine&quot;</span>, <span class="hljs-string">&quot;html&quot;</span>);
+app.set(<span class="hljs-string">&quot;views&quot;</span>, path.resolve(<span class="hljs-string">&quot;web/views&quot;</span>));
+app.engine(<span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;ejs&quot;</span>).__express);
+app.get(<span class="hljs-string">&quot;/&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-keyword">let</span> { tagId } = req.query;
+  <span class="hljs-keyword">let</span> tags = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM tags`</span>);
+  tagId = tagId || tags[<span class="hljs-number">0</span>].id;
+  <span class="hljs-keyword">let</span> articles = <span class="hljs-keyword">await</span> query(
+    <span class="hljs-string">`SELECT a.* from articles a inner join article_tag  t on a.id = t.article_id WHERE t.tag_id =? `</span>,
+    [tagId]
+  );
+  res.render(<span class="hljs-string">&quot;index&quot;</span>, {
+    tags,
+    articles,
+  });
+});
+app.get(<span class="hljs-string">&quot;/login&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  res.render(<span class="hljs-string">&quot;login&quot;</span>, { <span class="hljs-attr">title</span>: <span class="hljs-string">&quot;登录&quot;</span> });
+});
+app.post(<span class="hljs-string">&quot;/login&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-keyword">let</span> { email, password } = req.body;
+  <span class="hljs-keyword">let</span> oldUsers = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM users WHERE email=?`</span>, [email]);
+  <span class="hljs-keyword">let</span> user;
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(oldUsers) &amp;&amp; oldUsers.length &gt; <span class="hljs-number">0</span>) {
+    user = oldUsers[<span class="hljs-number">0</span>];
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">let</span> result = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`INSERT INTO users(email,password) VALUES(?,?)`</span>, [
+      email,
+      password,
+    ]);
+    user = {
+      <span class="hljs-attr">id</span>: result.insertId,
+      email,
+      password,
+    };
+  }
+  <span class="hljs-comment">// 如果登陆成功，就把当前的用户信息放在会话中，并重定向到首页</span>
+  req.session.user = user;
+  res.redirect(<span class="hljs-string">&quot;/&quot;</span>);
+});
+
+app.get(<span class="hljs-string">&quot;/subscribe&quot;</span>, checkLogin, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-keyword">let</span> tags = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM tags`</span>);
+  <span class="hljs-keyword">let</span> user = req.session.user; <span class="hljs-comment">//{id,name}</span>
+  <span class="hljs-keyword">let</span> selectedTags = <span class="hljs-keyword">await</span> query(
+    <span class="hljs-string">`SELECT tag_id from user_tag WHERE user_id = ?`</span>,
+    [user.id]
+  );
+  <span class="hljs-keyword">let</span> selectTagIds = selectedTags.map(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> item[<span class="hljs-string">&quot;tag_id&quot;</span>]);
+  tags.forEach(<span class="hljs-function">(<span class="hljs-params">item</span>) =&gt;</span> {
+    item.subscribe = selectTagIds.indexOf(item.id) != -<span class="hljs-number">1</span> ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>;
+  });
+  res.render(<span class="hljs-string">&quot;subscribe&quot;</span>, { <span class="hljs-attr">title</span>: <span class="hljs-string">&quot;请订阅你感兴趣的标签&quot;</span>, tags });
+});
+app.post(<span class="hljs-string">&quot;/subscribe&quot;</span>, checkLogin, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(req.body);
+  <span class="hljs-keyword">let</span> { tags } = req.body; <span class="hljs-comment">//[ &#x27;1&#x27;, &#x27;2&#x27;, &#x27;9&#x27; ] }</span>
+  <span class="hljs-keyword">if</span> (!tags) {
+    tags = [];
+  }
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> tags === <span class="hljs-string">&quot;string&quot;</span>) {
+    tags = [tags];
+  }
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getNum</span>(<span class="hljs-params">string</span>) </span>{
+    <span class="hljs-keyword">return</span> string.replace(<span class="hljs-regexp">/[^0-9]/gi</span>, <span class="hljs-string">&quot;&quot;</span>);
+  }
+  tags = tags.map(<span class="hljs-function">(<span class="hljs-params">tag</span>) =&gt;</span> getNum(tag));
+  <span class="hljs-built_in">console</span>.log(tags);
+  <span class="hljs-keyword">let</span> user = req.session.user; <span class="hljs-comment">//{id,name}</span>
+  <span class="hljs-keyword">await</span> query(<span class="hljs-string">`DELETE FROM user_tag WHERE user_id=?`</span>, [user.id]);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; tags.length; i++) {
+    <span class="hljs-keyword">await</span> query(<span class="hljs-string">`INSERT INTO user_tag(user_id,tag_id) VALUES(?,?)`</span>, [
+      user.id,
+      <span class="hljs-built_in">parseInt</span>(tags[i]),
+    ]);
+  }
+  res.redirect(<span class="hljs-string">&quot;/&quot;</span>);
+});
+
+app.get(<span class="hljs-string">&quot;/detail/:id&quot;</span>, <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+  <span class="hljs-keyword">let</span> id = req.params.id;
+  <span class="hljs-keyword">let</span> articles = <span class="hljs-keyword">await</span> query(<span class="hljs-string">`SELECT * FROM articles WHERE id=? `</span>, [id]);
+  res.render(<span class="hljs-string">&quot;detail&quot;</span>, { <span class="hljs-attr">article</span>: articles[<span class="hljs-number">0</span>] });
+});
+app.listen(<span class="hljs-number">8082</span>);
+
+process.on(<span class="hljs-string">&quot;uncaughtException&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err</span>) </span>{
+  <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&quot;uncaughtException: %s&quot;</span>, err.stack);
+});
+</code></pre><h5 id="页面实现页面模板文件夹views">页面实现：页面模板文件夹views <a class="markdownIt-Anchor" href="#页面实现页面模板文件夹views">#</a></h5><p>页面都放在views中，目录结构如下</p><pre class="hljs"><code>├── detail.html
+├── header.html
+├── index.html
+├── login.html
+└── subscribe.html
+</code></pre><p>这里我们需要如下页面</p><ul><li>index：首页</li><li>login：登陆页</li><li>header：顶部通用模块</li><li>detail：文章详情页</li><li>subscribe：订阅标签页</li></ul><p>我们分别实现下，先实现首页</p><pre class="hljs"><code>mkdir views &amp;&amp; cd views &amp;&amp; touch index.html &amp;&amp; touch login.html touch header.html touch detail.html touch subscribe.html
+</code></pre><p>然后实现如下内容</p><pre class="hljs"><code>&lt;%- include (&#x27;header.html&#x27;)%&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;container&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;row&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-2&quot;</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;list-group&quot;</span>&gt;</span>
+        &lt;%tags.forEach(tag=&gt;{%&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;list-group-item text-center&quot;</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;/?tagId=&lt;%=tag.id%&gt;&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">style</span>=<span class="hljs-string">&quot;width: 25px; height: 25px&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;&lt;%=tag.image%&gt;&quot;</span> /&gt;</span>
+            &lt;%=tag.name%&gt;
+          <span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+        &lt;%})%&gt;
+      <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-10&quot;</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;list-group&quot;</span>&gt;</span>
+        &lt;%articles.forEach(article=&gt;{%&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;list-group-item&quot;</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;/detail/&lt;%=article.id%&gt;&quot;</span>&gt;</span> &lt;%=article.title%&gt; <span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+        &lt;%})%&gt;
+      <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><p>login登陆页，实现如下内容</p><pre class="hljs"><code>&lt;%- include (&#x27;header.html&#x27;)%&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;row&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-4 col-md-offset-4&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">method</span>=<span class="hljs-string">&quot;POST&quot;</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span>
+        <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;email&quot;</span>
+        <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;email&quot;</span>
+        <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;form-control&quot;</span>
+        <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;请输入邮箱进行登录&quot;</span>
+      /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span>
+        <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;password&quot;</span>
+        <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;password&quot;</span>
+        <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;form-control&quot;</span>
+        <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;密码&quot;</span>
+      /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;submit&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;btn btn-default&quot;</span>&gt;</span>提交<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><p>header登陆页，实现如下内容</p><pre class="hljs"><code><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span> <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">http-equiv</span>=<span class="hljs-string">&quot;X-UA-Compatible&quot;</span> <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;ie=edge&quot;</span> /&gt;</span>
+	<span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">&quot;stylesheet&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css&quot;</span> <span class="hljs-attr">integrity</span>=<span class="hljs-string">&quot;sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu&quot;</span> <span class="hljs-attr">crossorigin</span>=<span class="hljs-string">&quot;anonymous&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>博客列表<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">nav</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;navbar navbar-default&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;container-fluid&quot;</span>&gt;</span>
+      <span class="hljs-comment">&lt;!-- Brand and toggle get grouped for better mobile display --&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;navbar-header&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">button</span>
+          <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;button&quot;</span>
+          <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;navbar-toggle collapsed&quot;</span>
+          <span class="hljs-attr">data-toggle</span>=<span class="hljs-string">&quot;collapse&quot;</span>
+          <span class="hljs-attr">data-target</span>=<span class="hljs-string">&quot;#bs-example-navbar-collapse-1&quot;</span>
+          <span class="hljs-attr">aria-expanded</span>=<span class="hljs-string">&quot;false&quot;</span>
+        &gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;sr-only&quot;</span>&gt;</span>Toggle navigation<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;icon-bar&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;icon-bar&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;icon-bar&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;navbar-brand&quot;</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span>&gt;</span>博客列表<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+
+      <span class="hljs-comment">&lt;!-- Collect the nav links, forms, and other content for toggling --&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;collapse navbar-collapse&quot;</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;bs-example-navbar-collapse-1&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;nav navbar-nav&quot;</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;/&quot;</span>&gt;</span>首页<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+          &lt;% if(user){ %&gt;
+          <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;/subscribe&quot;</span>&gt;</span>订阅<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+          &lt;%} else {%&gt;
+          <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;/login&quot;</span>&gt;</span>登陆<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+          &lt;%}%&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-comment">&lt;!-- /.navbar-collapse --&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- /.container-fluid --&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">nav</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+</code></pre><p>detail登陆页，实现如下内容</p><pre class="hljs"><code>&lt;%- include (&#x27;header.html&#x27;)%&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;container&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;row&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-12&quot;</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;panel&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;panel-heading&quot;</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;text-center&quot;</span>&gt;</span>&lt;%- article.title%&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;panel-body&quot;</span>&gt;</span>&lt;%- article.content%&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+
+</code></pre><p>subscribe登陆页，实现如下内容</p><pre class="hljs"><code>&lt;%- include (&#x27;header.html&#x27;)%&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="css">
+    <span class="hljs-selector-class">.tag</span> {
+        <span class="hljs-attribute">display</span>: flex;
+        <span class="hljs-attribute">flex-direction</span>: column;
+        <span class="hljs-attribute">justify-content</span>: center;
+        <span class="hljs-attribute">align-items</span>: center;
+    }
+    <span class="hljs-selector-class">.tag</span> <span class="hljs-selector-tag">img</span> {
+        <span class="hljs-attribute">width</span>: <span class="hljs-number">50px</span>;
+        <span class="hljs-attribute">margin-bottom</span>: <span class="hljs-number">20px</span>;
+    }
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;row&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">method</span>=<span class="hljs-string">&quot;POST&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;submit&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;btn btn-primary&quot;</span> /&gt;</span>
+        &lt;%
+            for(let i=0;i&lt;tags.length;i++){
+                let tag = tags[i];
+                %&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-3 tag&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;&lt;%=tag.image%&gt;&quot;</span> /&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>
+                    &lt;%=tag.name%&gt;
+                <span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>
+                    &lt;%=tag.subscribe%&gt;<span class="hljs-symbol">&amp;nbsp;</span>关注<span class="hljs-symbol">&amp;nbsp;</span>
+                        &lt;%=tag.article%&gt;<span class="hljs-symbol">&amp;nbsp;</span>文章
+                <span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;checkbox&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">label</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">input</span> &lt;%=<span class="hljs-string">tag.subscribe?</span> &quot;<span class="hljs-attr">checked</span>&quot;<span class="hljs-attr">:</span> &quot;&quot;%&gt;</span> type=&quot;checkbox&quot; name=&quot;tags&quot; value=&quot;
+                        &lt;%=tag.id%&gt;&quot;&gt; 关注
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">label</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            &lt;%}
+        %&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><p>login登陆页，实现如下内容</p><pre class="hljs"><code>&lt;%- include (&#x27;header.html&#x27;)%&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;row&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;col-md-4 col-md-offset-4&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">method</span>=<span class="hljs-string">&quot;POST&quot;</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span>
+        <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;email&quot;</span>
+        <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;email&quot;</span>
+        <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;form-control&quot;</span>
+        <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;请输入邮箱进行登录&quot;</span>
+      /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span>
+        <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;password&quot;</span>
+        <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;password&quot;</span>
+        <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;form-control&quot;</span>
+        <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;密码&quot;</span>
+      /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;submit&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;btn btn-default&quot;</span>&gt;</span>提交<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><h5 id="鉴权中间件实现鉴权中间件">鉴权中间件实现：鉴权中间件 <a class="markdownIt-Anchor" href="#鉴权中间件实现鉴权中间件">#</a></h5><p>auth鉴权中间件，在web目录下执行如下命令</p><pre class="hljs"><code>mkdir middleware &amp;&amp; touch auth.html
+</code></pre><p>然后实现如下内容</p><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkLogin</span>(<span class="hljs-params">req, res, next</span>) </span>{
+  <span class="hljs-keyword">if</span> (req.session &amp;&amp; req.session.user) {
+    next();
+  } <span class="hljs-keyword">else</span> {
+    res.redirect(<span class="hljs-string">&quot;/login&quot;</span>);
+  }
+}
+<span class="hljs-built_in">module</span>.exports = {
+  checkLogin,
+};
+
+</code></pre><p>至此，我们就完成了用于数据展示的node服务搭建啦！</p><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../前端爬虫/2. 数据入库.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item chapter-item-current"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"前端爬虫/3. 展示应用实现.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#node%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA">node服务搭建</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

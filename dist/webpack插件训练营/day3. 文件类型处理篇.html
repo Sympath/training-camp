@@ -1,0 +1,198 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：常见特性处理的方案 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/index.html" class="breadcrumb-item">webpack插件训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/day3. 文件类型处理篇.html" class="breadcrumb-item">day3. 文件类型处理篇.md</a></div><h1 class="article-title"># 要做什么：常见特性处理的方案</h1><div class="article"><p>本文将产出webpack对各个特性的处理，给出业界最常见方案，本文面向特性如下</p><ul><li>es高级特性降级：babel</li><li>react</li><li>css</li><li>less</li><li>静态资源（图片、文件）</li></ul><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="项目基础结构">项目基础结构 <a class="markdownIt-Anchor" href="#项目基础结构">#</a></h3><p>创建<code>3.webpack文件类型处理</code>目录，在其下实现如下结构</p><pre class="hljs"><code>.
+|-- images
+|   |-- 1.jpg
+|-- src
+|   |-- SourceHanSerifSC-Heavy.otf
+|   |-- index.css
+|   |-- index.html
+|   |-- index.js
+|-- webpack.config.js
+</code></pre><h3 id="项目内容实现">项目内容实现 <a class="markdownIt-Anchor" href="#项目内容实现">#</a></h3><h5 id="图片images">图片images <a class="markdownIt-Anchor" href="#图片images">#</a></h5><p>随便放一张jpg的图片，命名为1.jpg即可</p><h5 id="字体文件">字体文件 <a class="markdownIt-Anchor" href="#字体文件">#</a></h5><p>SourceHanSerifSC-Heavy.otf：git仓库内自取（<a href="https://github.com/Sympath/training-camp-project/blob/main/3.webpack%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B%E5%A4%84%E7%90%86/src/SourceHanSerifSC-Heavy.otf%EF%BC%89" target="_blank" rel="noopener">https://github.com/Sympath/training-camp-project/blob/main/3.webpack文件类型处理/src/SourceHanSerifSC-Heavy.otf）</a></p><h5 id="babelrc配置文件">.babelrc配置文件 <a class="markdownIt-Anchor" href="#babelrc配置文件">#</a></h5><p>需要支持基础配置和react配置</p><pre class="hljs"><code>{
+    <span class="hljs-string">&quot;presets&quot;</span>: [
+        <span class="hljs-string">&quot;@babel/preset-env&quot;</span>,
+        <span class="hljs-string">&quot;@babel/preset-react&quot;</span>
+    ]
+}
+</code></pre><h5 id="srcindexcss">src/index.css <a class="markdownIt-Anchor" href="#srcindexcss">#</a></h5><p>定义字体</p><pre class="hljs"><code><span class="hljs-keyword">@font-face</span> {
+    <span class="hljs-attribute">font-family</span>: <span class="hljs-string">&#x27;SourceHanSerifSC-Heavy&#x27;</span>;
+    <span class="hljs-attribute">src</span>: <span class="hljs-built_in">url</span>(<span class="hljs-string">&#x27;./SourceHanSerifSC-Heavy.otf&#x27;</span>) <span class="hljs-built_in">format</span>(<span class="hljs-string">&#x27;truetype&#x27;</span>);
+}
+<span class="hljs-selector-tag">div</span> {
+    <span class="hljs-attribute">font-family</span>: <span class="hljs-string">&#x27;SourceHanSerifSC-Heavy&#x27;</span>;
+    <span class="hljs-attribute">display</span>: flex;
+}
+<span class="hljs-selector-tag">img</span> {
+    <span class="hljs-attribute">width</span>: <span class="hljs-number">100px</span>;
+}
+</code></pre><h5 id="srcindexhtml">src/index.html <a class="markdownIt-Anchor" href="#srcindexhtml">#</a></h5><p>模板文件</p><pre class="hljs"><code><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span> <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Document<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre><h5 id="srcindexjs">src/index.js <a class="markdownIt-Anchor" href="#srcindexjs">#</a></h5><p>渲染的入口文件</p><pre class="hljs"><code><span class="hljs-keyword">import</span> img <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;../images/1.jpg&quot;</span>;
+<span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react&quot;</span>;
+<span class="hljs-keyword">import</span> ReactDOM <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react-dom&quot;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">&quot;./index.css&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Search</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">React</span>.<span class="hljs-title">Component</span> </span>{
+    <span class="hljs-function"><span class="hljs-title">render</span>(<span class="hljs-params"></span>)</span> {
+        <span class="hljs-keyword">return</span> (
+            <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+                Search Text change WDR
+                <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">{img}</span> /&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+        );
+    }
+}
+
+ReactDOM.render(<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Search</span> /&gt;</span></span>, <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&quot;root&quot;</span>));
+
+</code></pre><h3 id="实现对es高级特性降级babel">实现对es高级特性降级：babel <a class="markdownIt-Anchor" href="#实现对es高级特性降级babel">#</a></h3><h5 id="对应依赖">对应依赖 <a class="markdownIt-Anchor" href="#对应依赖">#</a></h5><p><strong>备注</strong>：外层已安装，无需安装，只是为了方便后续日常开发中复用</p><p>拆分配置文件需要使用此依赖</p><ul><li>@babel/core：babel的核心处理模块</li><li>babel-loader：babel和webpack的桥梁</li><li>@babel/preset-env：是Babel6时代babel-preset-latest的增强版。该预设除了包含所有稳定的转码插件，还可以根据我们设定的目标环境进行针对性转码。</li></ul><pre class="hljs"><code>npm i @babel/core@^7.4.4 @babel/preset-env@^7.4.4 babel-loader@^8.0.5 -D
+</code></pre><h5 id="增加es6对应的babel配置">增加ES6对应的babel配置 <a class="markdownIt-Anchor" href="#增加es6对应的babel配置">#</a></h5><p>新增配置文件.babelrc</p><pre class="hljs"><code>{
+  <span class="hljs-string">&quot;preset&quot;</span>: [
+    <span class="hljs-string">&quot;@babel/preset-env&quot;</span>
+  ]
+}
+</code></pre><h5 id="在webpack中使用">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用">#</a></h5><p>webpack.config.js</p><pre class="hljs"><code>  <span class="hljs-built_in">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.js$/</span>,
+        use: <span class="hljs-string">&quot;babel-loader&quot;</span>,
+      },
+    ],
+  },
+</code></pre><h3 id="配置react">配置react <a class="markdownIt-Anchor" href="#配置react">#</a></h3><h5 id="安装依赖">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖">#</a></h5><pre class="hljs"><code>npm i @babe/preset-react@^7.0.0 -D
+</code></pre><h5 id="增加es6对应的babel配置-1">增加ES6对应的babel配置 <a class="markdownIt-Anchor" href="#增加es6对应的babel配置-1">#</a></h5><p>新增配置文件.babelrc</p><pre class="hljs"><code>{
+    <span class="hljs-string">&quot;presets&quot;</span>: [
+        <span class="hljs-string">&quot;@babel/preset-env&quot;</span>,
+        <span class="hljs-string">&quot;@babel/preset-react&quot;</span>
+    ]
+}
+</code></pre><h5 id="在webpack中使用-1">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用-1">#</a></h5><p>webpack.config.js</p><pre class="hljs"><code>  <span class="hljs-built_in">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.jsx?$/</span>,
+        use: <span class="hljs-string">&quot;babel-loader&quot;</span>,
+      },
+    ],
+  },
+</code></pre><h3 id="配置css处理">配置CSS处理 <a class="markdownIt-Anchor" href="#配置css处理">#</a></h3><ul><li>css-loader：用于加载.css文件，并转换成commonjs对象</li><li>style-loader：将样式通过style标签插入到head中</li></ul><h5 id="安装依赖-1">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖-1">#</a></h5><pre class="hljs"><code>npm i style-loader@^0.23.1 css-loader@^2.1.1
+</code></pre><h5 id="增加es6对应的babel配置-2">增加ES6对应的babel配置 <a class="markdownIt-Anchor" href="#增加es6对应的babel配置-2">#</a></h5><p>新增配置文件.babelrc</p><pre class="hljs"><code>{
+    <span class="hljs-string">&quot;presets&quot;</span>: [
+        <span class="hljs-string">&quot;@babel/preset-env&quot;</span>,
+        <span class="hljs-string">&quot;@babel/preset-react&quot;</span>
+    ]
+}
+</code></pre><h5 id="在webpack中使用-2">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用-2">#</a></h5><p>webpack.config.js</p><pre class="hljs"><code>  <span class="hljs-built_in">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.css$/</span>,
+        use: [<span class="hljs-string">&quot;style-loader&quot;</span>, <span class="hljs-string">&quot;css-loader&quot;</span>],
+      },
+    ],
+  },
+</code></pre><h3 id="配置less处理">配置LESS处理 <a class="markdownIt-Anchor" href="#配置less处理">#</a></h3><ul><li>css-loader：用于加载.css文件，并转换成commonjs对象</li><li>style-loader：将样式通过style标签插入到head中</li><li>less-loader：用于加载.less文件，并转换成commonjs对象</li></ul><h5 id="安装依赖-2">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖-2">#</a></h5><pre class="hljs"><code>npm i style-loader@^0.23.1 css-loader@^2.1.1 less-loader@^5.0.0
+</code></pre><h5 id="增加es6对应的babel配置-3">增加ES6对应的babel配置 <a class="markdownIt-Anchor" href="#增加es6对应的babel配置-3">#</a></h5><p>新增配置文件.babelrc</p><pre class="hljs"><code>{
+    <span class="hljs-string">&quot;presets&quot;</span>: [
+        <span class="hljs-string">&quot;@babel/preset-env&quot;</span>,
+        <span class="hljs-string">&quot;@babel/preset-react&quot;</span>
+    ]
+}
+</code></pre><h5 id="在webpack中使用-3">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用-3">#</a></h5><p>webpack.config.js</p><pre class="hljs"><code>  <span class="hljs-built_in">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.less$/</span>,
+        use: [<span class="hljs-string">&quot;style-loader&quot;</span>, <span class="hljs-string">&quot;css-loader&quot;</span>, <span class="hljs-string">&quot;less-loader&quot;</span>],
+      },
+    ],
+  },
+</code></pre><h3 id="静态资源图片文件处理">静态资源（图片、文件）处理 <a class="markdownIt-Anchor" href="#静态资源图片文件处理">#</a></h3><ul><li>file-loader：用于加载静态资源，并转换成commonjs对象</li><li>url-loader：file-loader的封装，支持将体积在指定范围的图片转为base64内嵌</li></ul><h5 id="安装依赖-3">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖-3">#</a></h5><pre class="hljs"><code>npm i file-loader@^3.0.1 url-loader@^1.1.2
+</code></pre><h5 id="在webpack中使用-4">在webpack中使用 <a class="markdownIt-Anchor" href="#在webpack中使用-4">#</a></h5><p>webpack.config.js</p><pre class="hljs"><code>  <span class="hljs-built_in">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+      <span class="hljs-comment">// {</span>
+      <span class="hljs-comment">//   test: /.jpg|jpeg|gif|png$/,</span>
+      <span class="hljs-comment">//   use: &quot;file-loader&quot;,</span>
+      <span class="hljs-comment">// },</span>
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(png|jpg|gif|jpeg)$/</span>,
+        use: [
+          {
+            <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;url-loader&quot;</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">limit</span>: <span class="hljs-number">1024000</span>,
+            },
+          },
+        ],
+      },
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(woff|woff2|eot|ttf|otf)$/</span>,
+        use: <span class="hljs-string">&quot;file-loader&quot;</span>,
+      },
+    ],
+  },
+</code></pre><h3 id="最终的webpack配置文件内容">最终的webpack配置文件内容 <a class="markdownIt-Anchor" href="#最终的webpack配置文件内容">#</a></h3><p>webpack.config.js</p><pre class="hljs"><code><span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+<span class="hljs-keyword">const</span> HtmlWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;html-webpack-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> CleanWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;clean-webpack-plugin&quot;</span>);
+
+<span class="hljs-built_in">module</span>.exports = {
+    <span class="hljs-attr">context</span>: process.cwd(), <span class="hljs-comment">// 上下文对象</span>
+    <span class="hljs-attr">mode</span>: <span class="hljs-string">&quot;development&quot;</span>,
+    <span class="hljs-attr">entry</span>: {
+        <span class="hljs-attr">main</span>: <span class="hljs-string">&quot;./src/index.js&quot;</span>,
+    },
+    <span class="hljs-attr">output</span>: {
+        <span class="hljs-attr">path</span>: path.resolve(__dirname, <span class="hljs-string">&quot;./dist&quot;</span>),
+        <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name].js&quot;</span>,
+    },
+    <span class="hljs-attr">module</span>: {
+        <span class="hljs-attr">rules</span>: [
+            {
+                <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.js$/</span>,
+                use: <span class="hljs-string">&quot;babel-loader&quot;</span>,
+            },
+            {
+                <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.css$/</span>,
+                use: [<span class="hljs-string">&quot;style-loader&quot;</span>, <span class="hljs-string">&quot;css-loader&quot;</span>],
+            },
+            {
+                <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.less/</span>,
+                use: [<span class="hljs-string">&quot;style-loader&quot;</span>, <span class="hljs-string">&quot;css-loader&quot;</span>, <span class="hljs-string">&quot;less-loader&quot;</span>],
+            },
+            <span class="hljs-comment">// {</span>
+            <span class="hljs-comment">//   test: /.jpg|jpeg|gif|png$/,</span>
+            <span class="hljs-comment">//   use: &quot;file-loader&quot;,</span>
+            <span class="hljs-comment">// },</span>
+            {
+                <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(png|jpg|gif|jpeg)$/</span>,
+                use: [
+                    {
+                        <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;url-loader&quot;</span>,
+                        <span class="hljs-attr">options</span>: {
+                            <span class="hljs-attr">limit</span>: <span class="hljs-number">1024000</span>,
+                        },
+                    },
+                ],
+            },
+            {
+                <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(woff|woff2|eot|ttf|otf)$/</span>,
+                use: <span class="hljs-string">&quot;file-loader&quot;</span>,
+            },
+        ],
+    },
+    <span class="hljs-attr">plugins</span>: [
+        <span class="hljs-keyword">new</span> HtmlWebpackPlugin({
+            <span class="hljs-attr">template</span>: <span class="hljs-string">&quot;./src/index.html&quot;</span>,
+            <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;index.html&quot;</span>,
+        }),
+        <span class="hljs-keyword">new</span> CleanWebpackPlugin(),
+    ],
+};
+
+</code></pre><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../webpack插件训练营/day4. 性能分析篇.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item chapter-item-current"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"webpack插件训练营/day3. 文件类型处理篇.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84">项目基础结构</a></li>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E5%86%85%E5%AE%B9%E5%AE%9E%E7%8E%B0">项目内容实现</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E5%AF%B9es%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7%E9%99%8D%E7%BA%A7babel">实现对es高级特性降级：babel</a></li>\n<li><a href="#%E9%85%8D%E7%BD%AEreact">配置react</a></li>\n<li><a href="#%E9%85%8D%E7%BD%AEcss%E5%A4%84%E7%90%86">配置CSS处理</a></li>\n<li><a href="#%E9%85%8D%E7%BD%AEless%E5%A4%84%E7%90%86">配置LESS处理</a></li>\n<li><a href="#%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%9B%BE%E7%89%87%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86">静态资源（图片、文件）处理</a></li>\n<li><a href="#%E6%9C%80%E7%BB%88%E7%9A%84webpack%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%86%85%E5%AE%B9">最终的webpack配置文件内容</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

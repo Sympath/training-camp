@@ -1,0 +1,68 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：简单了解插件开发 - 插件可以做什么？ - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/index.html" class="breadcrumb-item">vscode训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/day1：简单了解插件开发.html" class="breadcrumb-item">day1：简单了解插件开发.md</a></div><h1 class="article-title"># 要做什么：简单了解插件开发 - 插件可以做什么？</h1><div class="article"><p>前期调研同学们书写插件的需求<br><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2io9zgstjj20u00w4tdu.jpg" alt="Alt text"></p><p><strong>可以肯定地说，当前需求都可以实现。</strong></p><p>在实现自己的插件之前，我们先了解VSCode插件能够做什么？</p><h5 id="基于electron框架的能力">基于Electron框架的能力 <a class="markdownIt-Anchor" href="#基于electron框架的能力">#</a></h5><ul><li>读取本地各类文件包括excel等</li><li>可以发送接收跨域的请求</li><li>创建一个本地的node服务器</li><li>持久化存储本地数据</li></ul><h5 id="界面上的可扩展定制区域">界面上的可扩展定制区域 <a class="markdownIt-Anchor" href="#界面上的可扩展定制区域">#</a></h5><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2io9zbz1oj21720u044m.jpg" alt=""><figcaption>Alt text</figcaption></figure><ul><li>编辑器主界面</li><li>编辑器图标栏</li><li>编辑器侧边栏</li><li>编辑器底部状态栏</li><li>首页的欢迎页面</li><li>设置页自己插件的设置</li></ul><h5 id="插件在代码编辑中可提供的能力">插件在代码编辑中可提供的能力 <a class="markdownIt-Anchor" href="#插件在代码编辑中可提供的能力">#</a></h5><ul><li>基于正则等工具自动编辑页面中代码</li><li>编排使用VSCode内置命令（核心）</li><li>自定义跳转、自动补全、悬浮提示</li><li>增强VSCode内置的MD预览和Git工具</li><li>对其他后缀名文件的解析和编辑</li><li>对非js/ts语言进行支持</li><li>自定义一个新主题</li></ul><h5 id="插件限制">插件限制 <a class="markdownIt-Anchor" href="#插件限制">#</a></h5><p>插件不能访问VS Code UI的DOM节点（如果强行改动，VSCode会提示自身损坏）</p><h3 id="怎么做到插件开发准备工作">怎么做到：插件开发准备工作 <a class="markdownIt-Anchor" href="#怎么做到插件开发准备工作">#</a></h3><h5 id="初始化一个插件开发环境">初始化一个插件开发环境 <a class="markdownIt-Anchor" href="#初始化一个插件开发环境">#</a></h5><p>确保已安装Node.js和Git，然后使用以下命令安装Yeoman和VS Code Extension Generator：</p><pre class="hljs"><code>npm install -g yo generator-code
+</code></pre><p>进入到合适的文件夹运行<code>yo code</code></p><p>准备好进行开发的TypeScript或JavaScript项目（选择js项目）</p><p>填写项目信息并选择项目结构（类似cli脚手架）</p><h5 id="启动项目">启动项目 <a class="markdownIt-Anchor" href="#启动项目">#</a></h5><p>用VSCode打开你的项目，然后，在编辑器中按F5，会打开一个运行此插件的新编辑器窗口。在新窗口中在命令面板（⇧⌘P）运行命令：Hello World，会发现底部多出了一个消息提示<br><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2ioa08oh0j20sg0lc0v5.jpg" alt="Alt text"></p><h5 id="目录文件说明">目录文件说明 <a class="markdownIt-Anchor" href="#目录文件说明">#</a></h5><p><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2io9zrmjuj20er0ibwfg.jpg" alt="Alt text"><br>这里面最主要的是两个文件，package.json和extension.js</p><ul><li>extension.ts文件是我们写插件具体逻辑的地方，放在后面详讲</li><li>package.json文件管理着整个项目，大量属性需要我们手动配置，以下说明👇</li></ul><pre class="hljs"><code>{
+	// 插件项目名
+    &quot;name&quot;: &quot;firstextension&quot;,
+	// 显示在应用市场的插件名，支持中文
+    &quot;displayName&quot;: &quot;FirstExtension插件教程&quot;,
+	// 插件描述
+    &quot;description&quot;: &quot;a tutorial for extension&quot;,
+	// 版本号
+    &quot;version&quot;: &quot;0.0.1&quot;,
+	// 表示插件最低支持的vscode版本
+    &quot;engines&quot;: {
+        &quot;vscode&quot;: &quot;^1.50.0&quot;
+    },
+	// 插件应用市场分类
+    &quot;categories&quot;: [
+        &quot;Other&quot;
+    ],
+	// 插件图标，至少128x128像素（可选配）
+    // &quot;icon&quot;: &quot;images/icon.png&quot;,
+	// 插件的被动激活事件，可配*来保持在后台持续运行
+    &quot;activationEvents&quot;: [
+        &quot;onCommand:firstExt.hello&quot;
+    ],
+	// 插件的主入口文件
+    &quot;main&quot;: &quot;./out/extension.js&quot;,
+	// 贡献点，整个插件最重要最多的配置项
+    &quot;contributes&quot;: {
+		// 命令
+        &quot;commands&quot;: [
+            {
+                &quot;command&quot;: &quot;firstExt.hello&quot;,
+                &quot;title&quot;: &quot;Hello World&quot;
+            }
+        ],
+		// 快捷键绑定，分为mac和win操作系统；when是触发的先决条件，可不配；
+        &quot;keybindings&quot;: [
+            {
+                &quot;command&quot;: &quot;firstExt.hello&quot;,
+                &quot;key&quot;: &quot;ctrl+w&quot;,
+                &quot;mac&quot;: &quot;cmd+shift+w&quot;,
+                &quot;when&quot;: &quot;editorTextFocus&quot;
+            }
+        ],
+		// ---- 下面配置在后面小说案例中说明
+		// 菜单
+        &quot;menus&quot;: {
+			// 编辑器鼠标右键菜单
+            &quot;editor/context&quot;: [],
+			// 编辑器右上角图标，不配置图片就显示文字
+            &quot;editor/title&quot;: [],
+			// 编辑器标题右键菜单
+            &quot;editor/title/context&quot;: [],
+			// 资源管理器右键菜单
+            &quot;explorer/context&quot;: []
+        },
+		// 自定义新的activitybar图标，也就是最左侧 图标栏
+        &quot;viewsContainers&quot;: {},
+		// 自定义左侧侧边栏内view树的实现
+        &quot;views&quot;: {},
+        // 插件自定义设置项，由用户配置后传参进入代码逻辑里，暂不展示
+		&quot;configuration&quot;: {},
+    }
+}
+</code></pre><h5 id="调试">调试 <a class="markdownIt-Anchor" href="#调试">#</a></h5><p>当前开发插件调试起来非常方便，只要当前行左侧点击红点，运行时即走到断点。<br><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2io9z1qwaj21e40t67b8.jpg" alt="Alt text"></p><p>更改代码文件保存后，需要在调试窗口执行Command+R刷新。</p><p>另外，对于ts支持也是完全自动化的，不用额外输入命令。</p><p>建议在 launch.json 中的“args”中添加&quot;--disable-extensions&quot;，阻止其他插件加载，不然要调试的插件加载很慢。</p><h2 id="课后作业">课后作业 <a class="markdownIt-Anchor" href="#课后作业">#</a></h2><p>经过介绍，第一天是不是开始准备大展拳脚呢？</p><p>别着急，VSCode提供了海量的api供我们实现各种各样的功能，千里之台，始于垒土，我们先从更改官方示例开始吧！</p><p><strong>留的任务</strong></p><p>1.更改官方示例中注册命令名字为<code>myExt.hello</code> ，并把message类型换为warning，内容换为“你好，王志远“</p><p>2.尝试增加官方示例中的该command激活途径，使可通过快捷键激活</p><p>3.（稍难）官网示例提示内容换为“要不要去百度官网呢”，底部产生两个选项“去官网”、“不去”，点击去官网可转到百度官网</p></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../vscode训练营/index.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../vscode训练营/day2：实现一个简单代码工具.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item chapter-item-current"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"vscode训练营/day1：简单了解插件开发.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li>\n<ul>\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C">怎么做到：插件开发准备工作</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A">课后作业</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

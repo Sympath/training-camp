@@ -1,0 +1,117 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title>## 主题 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/index.html" class="breadcrumb-item">前端爬虫</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../前端爬虫/开营计划.html" class="breadcrumb-item">开营计划.md</a></div><h1 class="article-title">## 主题</h1><div class="article"><p>关键词：puppetter、爬虫</p><h3 id="大纲">大纲 <a class="markdownIt-Anchor" href="#大纲">#</a></h3><p>注意：需要重点突出<strong>小节主题</strong>、<strong>截止时间</strong>、<strong>小结期待产出</strong></p><p>截止时间默认两天更新一次，两周内结束训练营；如果有特殊要求可以自行修改补充</p><table><thead><tr><th>小节主题</th><th>文档</th><th>期待产出</th><th>补充</th></tr></thead><tbody><tr><td>了解爬虫</td><td></td><td>了解爬虫能做到什么、为什么我们需要puppetter</td><td></td></tr><tr><td>puppetter实战</td><td></td><td>利用puppetter爬取页面信息，掘金文章以及京东模拟搜索实现爬取京东手机列表</td><td></td></tr><tr><td>数据入库</td><td></td><td>将爬取到的数据入库；包含node服务搭建、mysql数据库建表、navicat远程连接数据库</td><td></td></tr><tr><td>订阅更新推送</td><td></td><td>数据更新时推送给订阅者（邮件形式）；包含服务器构建、邮箱推送</td><td></td></tr></tbody></table><h3 id="其他补充">其他补充 <a class="markdownIt-Anchor" href="#其他补充">#</a></h3><ul><li>开营时间：待定</li><li>前置需要：建议整个云服务器（本文采用腾讯云），未购买的同学可以参考<a href="https://juejin.cn/post/7025743908407607327" target="_blank" rel="noopener">本人文章</a>进行购买</li></ul><h3 id="最终产出">最终产出 <a class="markdownIt-Anchor" href="#最终产出">#</a></h3><ol><li><p>前端爬虫知识入门：后端爬虫依赖接口，如果是前端渲染页面就无法爬取数据了，所以需要无头浏览器实现前端爬虫</p></li><li><p>提效工具的前置基础知识：模拟人为操作的提效工具，扩展思考范围</p></li></ol><h5 id="组织者自己的成果">组织者自己的成果 <a class="markdownIt-Anchor" href="#组织者自己的成果">#</a></h5><p>爬取掘金首页信息搭建了一个博客网站，可访问<a href="http://82.157.62.28:8082/" target="_blank" rel="noopener">地址</a>体验支持</p><ul><li>登陆鉴权</li><li>数据入库：爬取的数据会存入mysql数据库，采用navicat远程连接数据库控制</li><li>订阅更新：订阅的标签有更新文章时会推送至邮箱</li></ul><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2sv44sxukg21bp0u0ag0.gif" alt=""><figcaption>2022-06-01 17.13.15</figcaption></figure><h3 id="项目开始前置动作">项目开始前置动作 <a class="markdownIt-Anchor" href="#项目开始前置动作">#</a></h3><h5 id="依赖版本锁定">依赖版本锁定 <a class="markdownIt-Anchor" href="#依赖版本锁定">#</a></h5><pre class="hljs"><code>{
+  <span class="hljs-attr">&quot;name&quot;</span>: <span class="hljs-string">&quot;crawl&quot;</span>,
+  <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;1.0.0&quot;</span>,
+  <span class="hljs-attr">&quot;description&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+  <span class="hljs-attr">&quot;main&quot;</span>: <span class="hljs-string">&quot;index.js&quot;</span>,
+  <span class="hljs-attr">&quot;scripts&quot;</span>: {
+    <span class="hljs-attr">&quot;test&quot;</span>: <span class="hljs-string">&quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;</span>
+  },
+  <span class="hljs-attr">&quot;keywords&quot;</span>: [],
+  <span class="hljs-attr">&quot;author&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+  <span class="hljs-attr">&quot;license&quot;</span>: <span class="hljs-string">&quot;ISC&quot;</span>,
+  <span class="hljs-attr">&quot;dependencies&quot;</span>: {
+    <span class="hljs-attr">&quot;axios&quot;</span>: <span class="hljs-string">&quot;^0.27.2&quot;</span>,
+    <span class="hljs-attr">&quot;bluebird&quot;</span>: <span class="hljs-string">&quot;^3.7.2&quot;</span>,
+    <span class="hljs-attr">&quot;body-parser&quot;</span>: <span class="hljs-string">&quot;^1.20.0&quot;</span>,
+    <span class="hljs-attr">&quot;chalk&quot;</span>: <span class="hljs-string">&quot;^5.0.1&quot;</span>,
+    <span class="hljs-attr">&quot;cheerio&quot;</span>: <span class="hljs-string">&quot;^1.0.0-rc.11&quot;</span>,
+    <span class="hljs-attr">&quot;child_process&quot;</span>: <span class="hljs-string">&quot;^1.0.2&quot;</span>,
+    <span class="hljs-attr">&quot;cron&quot;</span>: <span class="hljs-string">&quot;^2.0.0&quot;</span>,
+    <span class="hljs-attr">&quot;ejs&quot;</span>: <span class="hljs-string">&quot;^3.1.8&quot;</span>,
+    <span class="hljs-attr">&quot;express&quot;</span>: <span class="hljs-string">&quot;^4.18.1&quot;</span>,
+    <span class="hljs-attr">&quot;express-session&quot;</span>: <span class="hljs-string">&quot;^1.17.3&quot;</span>,
+    <span class="hljs-attr">&quot;iconv-lite&quot;</span>: <span class="hljs-string">&quot;^0.6.3&quot;</span>,
+    <span class="hljs-attr">&quot;mysql&quot;</span>: <span class="hljs-string">&quot;^2.18.1&quot;</span>,
+    <span class="hljs-attr">&quot;nodemailer&quot;</span>: <span class="hljs-string">&quot;^6.7.5&quot;</span>,
+    <span class="hljs-attr">&quot;puppeteer&quot;</span>: <span class="hljs-string">&quot;^14.1.1&quot;</span>,
+    <span class="hljs-attr">&quot;request&quot;</span>: <span class="hljs-string">&quot;^2.88.2&quot;</span>,
+    <span class="hljs-attr">&quot;request-promise&quot;</span>: <span class="hljs-string">&quot;^4.2.6&quot;</span>,
+    <span class="hljs-attr">&quot;urijs&quot;</span>: <span class="hljs-string">&quot;^1.19.11&quot;</span>
+  }
+}
+</code></pre><h5 id="目录结构">目录结构 <a class="markdownIt-Anchor" href="#目录结构">#</a></h5><p>这个目录结构可以在实战时用作参考</p><pre class="hljs"><code>.
+├── 1. puppertee
+│   ├── 1.js
+│   ├── 2.js
+│   ├── 3.js
+│   ├── 4.js
+│   ├── 5. 爬取京东.js
+│   ├── baidu.png
+│   └── items-0.png
+├── 2. request
+│   ├── 1.request-json.js
+│   ├── 2.request-form.js
+│   ├── 3.request-file.js
+│   └── avatar.jpeg
+├── 3. cheerio
+│   ├── 1.cheerio.js
+│   ├── 2.cheerio-selector.js
+│   ├── 3.cheerio-attr.js
+│   ├── 4.cheerio-props.js
+│   └── 5.cheerio-find.js
+├── 4. dependens
+│   ├── 1. cron.js
+│   ├── 2. error.js
+│   ├── 3.debug.js
+│   ├── 4. pm2.js
+│   ├── 5. iconv-lite.js
+│   ├── 6.mail.js
+│   ├── 7.read.js
+│   └── my-debug.js
+├── bdyp.js
+├── crawl-server
+│   ├── app.js
+│   ├── bin
+│   │   └── www
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   ├── images
+│   │   ├── javascripts
+│   │   └── stylesheets
+│   ├── routes
+│   │   ├── index.js
+│   │   └── users.js
+│   └── uploads
+│       ├── 50d33a30f74fd55ffc0f3c0aaea989b6
+│       └── f24715d08bab6243f62bbe9f16a52d05
+├── crawl.sql
+├── db.js
+├── mail.js
+├── main.js
+├── package-lock.json
+├── package.json
+├── read
+│   ├── article-detail.js
+│   ├── articles.js
+│   ├── index.js
+│   ├── tags.js
+│   └── text.html
+├── readme.md
+├── utils
+│   ├── domain-util.js
+│   └── puppeteer-utils.js
+├── web
+│   ├── middleware
+│   │   └── auth.js
+│   ├── public
+│   │   └── css
+│   ├── router
+│   │   └── bdyp.js
+│   ├── server.js
+│   ├── update
+│   └── views
+│       ├── detail.html
+│       ├── footer.html
+│       ├── header.html
+│       ├── index.html
+│       ├── login.html
+│       └── subscribe.html
+└── write
+    ├── articles.js
+    ├── index.js
+    └── tags.js
+</code></pre></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../学习小组规划.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item chapter-item-current"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"前端爬虫/开营计划.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li>\n<ul>\n<li><a href="#%E5%A4%A7%E7%BA%B2">大纲</a></li>\n<li><a href="#%E5%85%B6%E4%BB%96%E8%A1%A5%E5%85%85">其他补充</a></li>\n<li><a href="#%E6%9C%80%E7%BB%88%E4%BA%A7%E5%87%BA">最终产出</a></li>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%A7%8B%E5%89%8D%E7%BD%AE%E5%8A%A8%E4%BD%9C">项目开始前置动作</a></li>\n</ul>\n</li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

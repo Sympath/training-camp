@@ -1,0 +1,174 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：利用vscode配置文件 + prettier + eslint实现保存自动格式化 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/index.html" class="breadcrumb-item">vscode训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../vscode训练营/day3：vscode配置文件.html" class="breadcrumb-item">day3：vscode配置文件.md</a></div><h1 class="article-title"># 要做什么：利用vscode配置文件 + prettier + eslint实现保存自动格式化</h1><div class="article"><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h2qhawa71eg20se09pmxq.gif" alt=""><figcaption>2022-05-30 15.48.11</figcaption></figure><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="在现有项目中使用">在现有项目中使用 <a class="markdownIt-Anchor" href="#在现有项目中使用">#</a></h3><p>利用vscode配置文件 + prettier + eslint实现保存自动格式化：<a href="https://juejin.cn/post/7103462793500131336/" target="_blank" rel="noopener">https://juejin.cn/post/7103462793500131336/</a></p><h3 id="通过插件实现命令写入">通过插件实现命令写入 <a class="markdownIt-Anchor" href="#通过插件实现命令写入">#</a></h3><p>根据文章，我们很容易就能做到实现保存自动格式化，但还是要做【新建配置文件 - 复制粘贴】的动作，既然研制插件了，我们就尝试用一个命令实现它吧！</p><p>同样是三步走</p><ul><li>配置命令</li><li>实现注册</li><li>实现逻辑</li></ul><h5 id="packagejson中配置命令">package.json中配置命令 <a class="markdownIt-Anchor" href="#packagejson中配置命令">#</a></h5><pre class="hljs"><code>		<span class="hljs-string">&quot;commands&quot;</span>: [
+			{
+        <span class="hljs-string">&quot;command&quot;</span>: <span class="hljs-string">&quot;edit-article.formatOnSave&quot;</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;formatOnSave&quot;</span>
+      }
+		],
+</code></pre><p>在这个例子中，我们使用onCommand来激活插件，这样该命令可以被快捷键等执行，从而激活插件逻辑</p><pre class="hljs"><code>	&quot;activationEvents&quot;: [
+		&quot;onCommand:firstExt.formatOnSave&quot;
+	],
+</code></pre><h5 id="实现注册">实现注册 <a class="markdownIt-Anchor" href="#实现注册">#</a></h5><p>下面我们在extension.js中的activate中注册命令；命令的实现我们另起一个文件<code>formatOnSave.js</code></p><pre class="hljs"><code><span class="hljs-keyword">let</span> formatOnSave = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;./formatOnSave&#x27;</span>);
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">activate</span>(<span class="hljs-params">context: vscode.ExtensionContext</span>) </span>{  
+<span class="hljs-comment">// 注册命令名和对应的回调函数</span>
+    <span class="hljs-keyword">const</span> insertLog = vscode.commands.registerCommand(<span class="hljs-string">&#x27;edit-article.formatOnSave&#x27;</span>, formatOnSave);
+    context.subscriptions.push(insertLog);
+}
+</code></pre><p>在同层目录中书写逻辑，逻辑很简单</p><ul><li>获取当前工作区目录</li><li>判断配置文件是否存在<ul><li>如果不存在，写入指定内容</li><li>如果存在，提示自动生成失败</li></ul></li></ul><pre class="hljs"><code><span class="hljs-keyword">const</span> vscode = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;vscode&quot;</span>);
+<span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;fs&quot;</span>);
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+
+<span class="hljs-comment">/**
+ * 类型判断函数 传递一个要判断的类型 会返回一个函数 传要判断的值 返回是否属于之前的类型
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>type 是否是此类型
+ * <span class="hljs-doctag">@returns</span>
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">typeCheck</span>(<span class="hljs-params">type</span>) </span>{
+  <span class="hljs-keyword">let</span> types = [
+    <span class="hljs-string">&quot;Array&quot;</span>,
+    <span class="hljs-string">&quot;Object&quot;</span>,
+    <span class="hljs-string">&quot;Number&quot;</span>,
+    <span class="hljs-string">&quot;String&quot;</span>,
+    <span class="hljs-string">&quot;Undefined&quot;</span>,
+    <span class="hljs-string">&quot;Boolean&quot;</span>,
+    <span class="hljs-string">&quot;Function&quot;</span>,
+    <span class="hljs-string">&quot;Map&quot;</span>,
+    <span class="hljs-string">&quot;Null&quot;</span>,
+  ];
+  <span class="hljs-keyword">let</span> map = {};
+  types.forEach(<span class="hljs-function">(<span class="hljs-params">type</span>) =&gt;</span> {
+    map[type] = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">target</span>) </span>{
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.prototype.toString.call(target) === <span class="hljs-string">`[object <span class="hljs-subst">${type}</span>]`</span>;
+    };
+  });
+  <span class="hljs-keyword">return</span> map[type];
+}
+<span class="hljs-comment">/**
+ * 遍历对象 直接获取key value  （不会遍历原型链  forin会）
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>obj 被遍历对象
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> </span>cb 回调
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">eachObj</span>(<span class="hljs-params">obj, cb</span>) </span>{
+  <span class="hljs-keyword">if</span> (typeCheck(<span class="hljs-string">&quot;Map&quot;</span>)(obj)) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> [key, value] <span class="hljs-keyword">of</span> obj) {
+      cb(key, value);
+    }
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (typeCheck(<span class="hljs-string">&quot;Object&quot;</span>)(obj)) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> [key, value] <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.entries(obj)) {
+      cb(key, value);
+    }
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;请传递对象类型&quot;</span>);
+  }
+}
+<span class="hljs-comment">/** 判断文件是否存在
+ *
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">filePath</span></span>
+ * <span class="hljs-doctag">@returns</span>
+ */</span>
+<span class="hljs-keyword">const</span> fileIsExist = <span class="hljs-keyword">async</span> (filePath) =&gt; {
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> fs.promises
+    .access(filePath)
+    .then(<span class="hljs-function">() =&gt;</span> <span class="hljs-literal">true</span>)
+    .catch(<span class="hljs-function">(<span class="hljs-params">_</span>) =&gt;</span> <span class="hljs-literal">false</span>);
+};
+<span class="hljs-comment">/** 写入文件
+ *
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">path</span></span>
+ * <span class="hljs-doctag">@param <span class="hljs-type">{*}</span> <span class="hljs-variable">buffer</span></span>
+ * <span class="hljs-doctag">@returns</span>
+ */</span>
+<span class="hljs-keyword">const</span> writeFileRecursive = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">path, buffer</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">res, rej</span>) =&gt;</span> {
+    <span class="hljs-keyword">let</span> lastPath = path.substring(<span class="hljs-number">0</span>, path.lastIndexOf(<span class="hljs-string">&quot;/&quot;</span>));
+    fs.mkdir(lastPath, { <span class="hljs-attr">recursive</span>: <span class="hljs-literal">true</span> }, <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+      <span class="hljs-keyword">if</span> (err) <span class="hljs-keyword">return</span> rej(err);
+      fs.writeFile(path, buffer, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err</span>) </span>{
+        <span class="hljs-keyword">if</span> (err) <span class="hljs-keyword">return</span> rej(err);
+        <span class="hljs-keyword">return</span> res(<span class="hljs-literal">null</span>);
+      });
+    });
+  });
+};
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">let</span> Workspace = vscode.workspace;
+  <span class="hljs-keyword">const</span> folders = Workspace.workspaceFolders;
+  <span class="hljs-keyword">let</span> fileMap = {
+    <span class="hljs-string">&quot;settings.json&quot;</span>: <span class="hljs-string">`
+{
+  	// 支持.vue文件的格式化
+    &quot;[vue]&quot;: {
+      &quot;editor.defaultFormatter&quot;: &quot;esbenp.prettier-vscode&quot;
+    },
+     // 匹配.tsx文件
+    &quot;[javascriptreact]&quot;: {
+        &quot;editor.formatOnSave&quot;: true,
+        &quot;editor.defaultFormatter&quot;: &quot;esbenp.prettier-vscode&quot;
+    },
+     // 匹配.tsx文件
+    &quot;[typescriptreact]&quot;: {
+        &quot;editor.formatOnSave&quot;: true,
+        &quot;editor.defaultFormatter&quot;: &quot;esbenp.prettier-vscode&quot;
+    },
+     // 匹配.ts文件
+    &quot;[typescript]&quot;: {
+        &quot;editor.formatOnSave&quot;: true,
+        &quot;editor.defaultFormatter&quot;: &quot;esbenp.prettier-vscode&quot;
+    },
+    &quot;eslint.alwaysShowStatus&quot;: true,
+    &quot;eslint.format.enable&quot;: true,
+    &quot;eslint.packageManager&quot;: &quot;yarn&quot;,
+    &quot;eslint.run&quot;: &quot;onSave&quot;,
+    &quot;editor.codeActionsOnSave&quot;: {
+      &quot;source.fixAll.eslint&quot;: true
+    },
+    &quot;vetur.validation.template&quot;: false,
+    &quot;editor.formatOnPaste&quot;: true,
+    &quot;editor.formatOnType&quot;: true,
+    &quot;editor.formatOnSave&quot;: true,
+  }
+`</span>,
+  };
+
+  folders.forEach(<span class="hljs-function">(<span class="hljs-params">folder</span>) =&gt;</span> {
+    <span class="hljs-comment">// 获取当前工作区目录</span>
+    <span class="hljs-keyword">let</span> vscodeFilePath = <span class="hljs-string">`<span class="hljs-subst">${folder.uri.fsPath}</span>/.vscode`</span>;
+    eachObj(fileMap, <span class="hljs-keyword">async</span> (fileName, content) =&gt; {
+      <span class="hljs-keyword">let</span> filePath = path.join(vscodeFilePath, fileName);
+      <span class="hljs-keyword">let</span> isExist = <span class="hljs-keyword">await</span> fileIsExist(filePath);
+      <span class="hljs-comment">// 判断配置文件是否存在，如果不存在，写入指定内容；如果存在，提示自动生成失败</span>
+      <span class="hljs-keyword">if</span> (isExist) {
+        vscode.window.showErrorMessage(<span class="hljs-string">`<span class="hljs-subst">${fileName}</span>已存在，自动生成失败`</span>);
+      } <span class="hljs-keyword">else</span> {
+        writeFileRecursive(filePath, content).then(
+          <span class="hljs-function">() =&gt;</span> {
+            vscode.window.showInformationMessage(<span class="hljs-string">`<span class="hljs-subst">${fileName}</span>自动生成成功`</span>);
+          },
+          <span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> {
+            vscode.window.showErrorMessage(<span class="hljs-string">`<span class="hljs-subst">${fileName}</span>自动生成失败，<span class="hljs-subst">${err}</span>`</span>);
+          }
+        );
+      }
+    });
+  });
+};
+
+</code></pre><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2><ul><li>通过文章，我们会了解到还有<code>tasks.json</code>，可以做到指定任务，如下配置可以做到【使用<code>command + t</code>执行<code>npm run dev</code>】，请扩展本文的实现，做到同时自动生成此文件</li></ul><pre class="hljs"><code>{
+    <span class="hljs-comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span>
+    <span class="hljs-comment">// for the documentation about the tasks.json format</span>
+    <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;2.0.0&quot;</span>,
+    <span class="hljs-attr">&quot;tasks&quot;</span>: [
+        {
+            <span class="hljs-attr">&quot;label&quot;</span>: <span class="hljs-string">&quot;runNode&quot;</span>,
+            <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;npm&quot;</span>,
+            <span class="hljs-attr">&quot;script&quot;</span>: <span class="hljs-string">&quot;dev&quot;</span>,
+            <span class="hljs-attr">&quot;group&quot;</span>: {
+                <span class="hljs-attr">&quot;kind&quot;</span>: <span class="hljs-string">&quot;test&quot;</span>,
+                <span class="hljs-attr">&quot;isDefault&quot;</span>: <span class="hljs-literal">true</span>
+            }
+        }
+    ]
+}
+</code></pre></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../vscode训练营/day2：实现一个简单代码工具.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../vscode训练营/day4：完善工具，添加更多功能并发布.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item chapter-item-current"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"vscode训练营/day3：vscode配置文件.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#%E5%9C%A8%E7%8E%B0%E6%9C%89%E9%A1%B9%E7%9B%AE%E4%B8%AD%E4%BD%BF%E7%94%A8">在现有项目中使用</a></li>\n<li><a href="#%E9%80%9A%E8%BF%87%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0%E5%91%BD%E4%BB%A4%E5%86%99%E5%85%A5">通过插件实现命令写入</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

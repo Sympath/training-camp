@@ -1,0 +1,107 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title>shell之函数 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../shell编程训练营/index.html" class="breadcrumb-item">shell编程训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html" class="breadcrumb-item">shell之函数</a></div><h1 class="article-title">shell之函数</h1><div class="article"><p>用于重复命令逻辑的集合</p><ul><li>函数的定义和执行</li><li>函数参数</li><li>函数的作用范围</li><li>模块化</li><li>系统自建函数库</li></ul><h3 id="函数的定义和执行">函数的定义和执行 <a class="markdownIt-Anchor" href="#函数的定义和执行">#</a></h3><p>定义</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash"> <span class="hljs-keyword">function</span>关键词可以省略</span>
+function fname(){
+ 命令
+}
+</code></pre><p>执行</p><pre class="hljs"><code>fname
+</code></pre><p>实例</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash"> <span class="hljs-keyword">function</span>关键词可以省略</span>
+function cdls() {
+    cd /var
+    ls
+}
+cdls
+</code></pre><h3 id="函数变量">函数变量 <a class="markdownIt-Anchor" href="#函数变量">#</a></h3><p>分为内部定义的变量和外部的传参</p><h5 id="内部定义">内部定义 <a class="markdownIt-Anchor" href="#内部定义">#</a></h5><pre class="hljs"><code>local 变量名
+</code></pre><h5 id="外部传参">外部传参 <a class="markdownIt-Anchor" href="#外部传参">#</a></h5><p>调用</p><pre class="hljs"><code>funcName a b
+</code></pre><p>这里有巨坑：</p><ol><li>函数的返回值（return）只支持数字类型，所以我们需要使用echo输出流的形式巧妙的模拟返回其他类型数据</li></ol><pre class="hljs"><code>function funcName(){
+	echo aaa
+}
+returnContent=`funcName`
+</code></pre><ol start="2"><li>如果参数中包含了空格，一定要在传递时用引号包裹，不然会被解析成多个参数（比如数组）</li></ol><pre class="hljs"><code>arr=(a b c)
+funcName &quot;${arr[@]}&quot;
+</code></pre><ol start="3"><li>参数和返回值只支持字符串，所以如果想支持数组，可以采用如下方式：<ol><li>入参：将数组的所有内容转为字符串传递，再在内部转为数组</li><li>返回值：将数组的所有内容转为字符串返回，再在外部转为数组</li></ol></li></ol><pre class="hljs"><code>&lt;&lt;&#x27;COMMENT&#x27;
+追加元素
+@param arr 数组名
+@param item 被追加的元素
+@return  改变后的数组字符串
+COMMENT
+
+function push() {
+    # 获取数组名
+    local name=$1
+    # 获取数组内容，创造一个对应的内部数组
+    eval local innerArr=(\${${name}[@]})
+    local item=$2
+    innerArr+=($item)
+    # 先清除的尝试 失败
+    # local length=${#innerArr[@]}
+    # eval unset $name 
+    # for((i=0;i&lt;$length;i++)); do
+    #     eval unset $name[$i]
+    # done
+    echo ${innerArr[@]}
+}
+arr=(a b c)
+arr=(`push arr aaa`) # 这里的数组已经成为(a b c d)
+echo arr===${arr[@]}
+</code></pre><h5 id="内部使用">内部使用 <a class="markdownIt-Anchor" href="#内部使用">#</a></h5><pre class="hljs"><code>$1 $2 $3...$n
+</code></pre><p>注意点</p><ol><li>如果两位数了，假如是10，就需要使用${10}</li><li>$#：参数个数总数</li><li>$*：作为字符串输出所有参数</li><li><p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>：脚本运行的当前进程</mtext><mi>I</mi><mi>D</mi><mtext>号</mtext></mrow><annotation encoding="application/x-tex">：脚本运行的当前进程ID号</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord cjk_fallback">：</span><span class="mord cjk_fallback">脚</span><span class="mord cjk_fallback">本</span><span class="mord cjk_fallback">运</span><span class="mord cjk_fallback">行</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">当</span><span class="mord cjk_fallback">前</span><span class="mord cjk_fallback">进</span><span class="mord cjk_fallback">程</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mord mathnormal" style="margin-right:0.02778em;">D</span><span class="mord cjk_fallback">号</span></span></span></span></span></p></li></ol><pre class="hljs"><code>funWithParam(){
+    echo &quot;第一个参数为 $1 !&quot;
+    echo &quot;第二个参数为 $2 !&quot;
+    echo &quot;第十个参数为 $10 !&quot;
+    echo &quot;第十个参数为 ${10} !&quot;
+    echo &quot;第十一个参数为 ${11} !&quot;
+    echo &quot;参数总数有 $# 个!&quot;
+    echo &quot;作为一个字符串输出所有参数 $* !&quot;
+}
+funWithParam 1 2 3 4 5 6 7 8 9 34 73
+</code></pre><h5 id="实例之传参">实例之传参 <a class="markdownIt-Anchor" href="#实例之传参">#</a></h5><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash"> <span class="hljs-keyword">function</span>关键词可以省略</span>
+function cdls() {
+    cd $1
+    ls
+}
+cdls /tmp
+</code></pre><h5 id="实例之内部变量">实例之内部变量 <a class="markdownIt-Anchor" href="#实例之内部变量">#</a></h5><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash"> <span class="hljs-keyword">function</span>关键词可以省略</span>
+function checkpid() {
+    local i
+    for i in $*; do
+        # linux中，每个在运行的进程都会有一个在/proc目录下对应的子目录，目录名为pid，这也是ps
+        [ -d &quot;/proc/$i&quot; ] &amp;&amp; return 0
+    done
+}
+checkpid 5380
+echo $?
+</code></pre><h3 id="模块化">模块化 <a class="markdownIt-Anchor" href="#模块化">#</a></h3><p>其实shell的模块化（即函数的导入导出）非常简单，我们知道shell会话间的变量是互通的（函数中的local变量除外），这时我们只要以当前shell会话执行下定义函数的sh，就能访问到对应的函数了。而如何以当前shell执行呢？就是之前讲到的知识：以source或者.方式执行sh文件。</p><h5 id="引入">引入 <a class="markdownIt-Anchor" href="#引入">#</a></h5><p>引入方式很简单</p><pre class="hljs"><code>source [函数库的绝对路径]
+./11.sh
+source 11.sh
+
+bash 11.sh
+~ 11.sh
+
+sh
+bash
+</code></pre><h5 id="案例">案例 <a class="markdownIt-Anchor" href="#案例">#</a></h5><p>存在函数库libs/os.sh</p><pre class="hljs"><code><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span>
+<span class="hljs-meta">#</span><span class="bash"> 获取当前系统类型</span>
+<span class="hljs-meta">#</span><span class="bash"> @<span class="hljs-built_in">return</span>  platForm</span>
+function getPlatForm() {
+    local innerPlatForm
+    if [[ $(uname) == &#x27;Darwin&#x27; ]]; then
+        innerPlatForm=mac
+    fi
+    if [[ $(uname) == &#x27;Linux&#x27; ]]; then
+        innerPlatForm=linux
+    fi
+    if [[ $(uname) == &#x27;win32&#x27; ]]; then
+        innerPlatForm=window
+    fi
+    # shell 的 function 只能返回整数值，所以如果想接收字符串类型 echo+$()方式获取
+    echo $innerPlatForm
+}
+</code></pre><p>引入使用时</p><pre class="hljs"><code>source ./libs/os.sh
+<span class="hljs-meta">#</span><span class="bash"> 执行函数</span>
+platForm=$(getPlatForm)
+<span class="hljs-meta">#</span><span class="bash"> 看输出结果</span>
+echo $platForm
+</code></pre><h5 id="注意事项">注意事项 <a class="markdownIt-Anchor" href="#注意事项">#</a></h5><ol><li>shell 的 function 中的return语句只能返回整数值，所以如果想接收字符串类型 echo+$()方式获取</li></ol><h3 id="系统自建函数库">系统自建函数库 <a class="markdownIt-Anchor" href="#系统自建函数库">#</a></h3><p>linux系统中存在自带的函数库，地址如下</p><pre class="hljs"><code>/etc/init.d/functions
+</code></pre><p>在配置文件中也是用了大量的循环判断，可以看<code>/etc/profile</code>或者<code>/etc/.bashrc</code></p></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item chapter-item-current"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"shell编程训练营/3. Shell 的函数、模块化、公共函数库.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li>\n<ul>\n<li><a href="#%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E6%89%A7%E8%A1%8C">函数的定义和执行</a></li>\n<li><a href="#%E5%87%BD%E6%95%B0%E5%8F%98%E9%87%8F">函数变量</a></li>\n<li><a href="#%E6%A8%A1%E5%9D%97%E5%8C%96">模块化</a></li>\n<li><a href="#%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%BB%BA%E5%87%BD%E6%95%B0%E5%BA%93">系统自建函数库</a></li>\n</ul>\n</li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

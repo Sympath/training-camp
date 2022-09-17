@@ -1,0 +1,180 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：webpack 产物缓存 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/index.html" class="breadcrumb-item">webpack插件训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html" class="breadcrumb-item">day6. 性能优化篇：缓存.md</a></div><h1 class="article-title"># 要做什么：webpack 产物缓存</h1><div class="article"><p>学习并实战 webpack 中通过缓存实现性能提升的方案</p><ul><li>文件指纹：打包后输出的文件名后缀，存在三种类型【Hash、Chunkhash、Contenthash】</li><li>缓存：webpack 模块化的自带缓存、懒加载</li></ul><h2 id="怎么做到文件指纹">怎么做到：文件指纹 <a class="markdownIt-Anchor" href="#怎么做到文件指纹">#</a></h2><h3 id="项目目录结构">项目目录结构 <a class="markdownIt-Anchor" href="#项目目录结构">#</a></h3><p>既然是实战项目，我们现在先来搭建下框架，先找创建一个空目录<code>5.webpack性能优化篇之体积优化</code>，我们需要创建如下结构的测试项目</p><pre class="hljs"><code>.
+|-- images
+|   |-- <span class="hljs-number">1.</span>jpg
+|-- src
+|   |-- SourceHanSerifSC-Heavy.otf
+|   |-- index.css
+|   |-- index.html
+|   |-- index.js
+|-- webpack.config.js
+</code></pre><p>简单介绍下</p><ul><li>src：项目源代码</li><li>webpack.conf.js：本次项目的 webpack 配置</li></ul><p>补充：一个个建目录太麻烦，推荐个人开发的 vscode 插件 weiyi-tools，安装好后</p><ol><li>复制上面目录结构内容</li><li>在侧边栏自己想要的空目录处右键</li><li>找到【选中目录工具箱 - 根据 tree 结果生成目录】，点击</li></ol><p>效果如下</p><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h3kldh54m8j217v0u0q56.jpg" alt="2022-06-24 14.40.09" style="zoom:25%;"><p>src/index.js</p><pre class="hljs"><code><span class="hljs-keyword">import</span> img <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;../images/1.jpg&quot;</span>;
+<span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react&quot;</span>;
+<span class="hljs-keyword">import</span> ReactDOM <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react-dom&quot;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">&quot;./index.css&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Search</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">React</span>.<span class="hljs-title">Component</span> </span>{
+  <span class="hljs-function"><span class="hljs-title">render</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-keyword">return</span> (
+      <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+        Search Text 文件指纹
+        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">{img}</span> /&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+    );
+  }
+}
+
+ReactDOM.render(<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Search</span> /&gt;</span></span>, <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&quot;root&quot;</span>));
+</code></pre><p>src/index.html</p><pre class="hljs"><code><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span> <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Document<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;root&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre><p>src/index.css</p><pre class="hljs"><code><span class="hljs-keyword">@font-face</span> {
+  <span class="hljs-attribute">font-family</span>: <span class="hljs-string">&quot;SourceHanSerifSC-Heavy&quot;</span>;
+  <span class="hljs-attribute">src</span>: <span class="hljs-built_in">url</span>(<span class="hljs-string">&quot;./SourceHanSerifSC-Heavy.otf&quot;</span>) <span class="hljs-built_in">format</span>(<span class="hljs-string">&quot;truetype&quot;</span>);
+}
+<span class="hljs-selector-tag">div</span> {
+  <span class="hljs-attribute">font-family</span>: <span class="hljs-string">&quot;SourceHanSerifSC-Heavy&quot;</span>;
+  <span class="hljs-attribute">display</span>: flex;
+}
+<span class="hljs-selector-tag">img</span> {
+  <span class="hljs-attribute">width</span>: <span class="hljs-number">100px</span>;
+}
+</code></pre><p>这里用到了 react，所以需要 babel 配置对 react 的支持，<code>.babelrc</code>的内容如下</p><pre class="hljs"><code>{
+  <span class="hljs-attr">&quot;presets&quot;</span>: [<span class="hljs-string">&quot;@babel/preset-env&quot;</span>, <span class="hljs-string">&quot;@babel/preset-react&quot;</span>]
+}
+</code></pre><p>至此，我们的实战项目的框架也就搭建好啦！</p><h3 id="文件指纹种类">文件指纹种类 <a class="markdownIt-Anchor" href="#文件指纹种类">#</a></h3><ul><li>Hash：代表每次 webpack 编译中生成的 hash 值，所有使用这种方式的文件 hash 都相同</li><li>Chunkhash：基于入口文件及其关联的 chunk 形成，某个文件的改动只会影响与它有关联的 chunk 的 hash 值，不会影响其他文件</li><li>Contenthash：根据文件内容创建。当文件内容发生变化时，contenthash 发生变化</li></ul><h3 id="怎么生成文件指纹">怎么生成文件指纹 <a class="markdownIt-Anchor" href="#怎么生成文件指纹">#</a></h3><h5 id="输出-js-的文件指纹">输出 js 的文件指纹 <a class="markdownIt-Anchor" href="#输出-js-的文件指纹">#</a></h5><pre class="hljs"><code>{
+  ...
+   <span class="hljs-attr">output</span>: {
+    <span class="hljs-attr">path</span>: path.resolve(__dirname, <span class="hljs-string">&quot;./dist&quot;</span>),
+    <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name]_[hash:8].js&quot;</span>,
+  },
+}
+</code></pre><h5 id="输出图片字体文件等静态资源的文件指纹">输出图片、字体文件等静态资源的文件指纹 <a class="markdownIt-Anchor" href="#输出图片字体文件等静态资源的文件指纹">#</a></h5><pre class="hljs"><code><span class="hljs-built_in">module</span>: {
+  <span class="hljs-attr">rules</span>: [
+    {
+      <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(png|jpg|gif|jpeg)$/</span>,
+      use: [
+        {
+          <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;file-loader&quot;</span>,
+          <span class="hljs-attr">options</span>: {
+            <span class="hljs-attr">name</span>: <span class="hljs-string">&quot;[name]_[hash:8].[ext]&quot;</span>,
+          },
+        },
+      ],
+    },
+    {
+      <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.(woff|woff2|eot|ttf|otf)$/</span>,
+      use: [
+        {
+          <span class="hljs-attr">loader</span>: <span class="hljs-string">&quot;file-loader&quot;</span>,
+          <span class="hljs-attr">options</span>: {
+            <span class="hljs-attr">limit</span>: <span class="hljs-number">1024000</span>,
+            <span class="hljs-attr">options</span>: {
+              <span class="hljs-attr">name</span>: <span class="hljs-string">&quot;[name]_[hash:8][ext]&quot;</span>,
+            },
+          },
+        },
+      ],
+    },
+  ];
+}
+</code></pre><h5 id="css-文件的文件指纹">CSS 文件的文件指纹 <a class="markdownIt-Anchor" href="#css-文件的文件指纹">#</a></h5><p>安装依赖</p><pre class="hljs"><code>npm i mini-css-extract-plugin
+</code></pre><p>在 webpack 中使用，webpack.config.js 内容如下</p><ul><li>将 css 文件抽离成单独文件：这里需要用<code>MiniCssExtractPlugin.loader</code>替换<code>style-loader</code></li><li>文件指纹：使用<code>MiniCssExtractPlugin.loader</code>插件</li></ul><pre class="hljs"><code><span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+<span class="hljs-keyword">const</span> HtmlWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;html-webpack-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> MiniCssExtractPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;mini-css-extract-plugin&quot;</span>);
+
+<span class="hljs-built_in">module</span>.exports = {
+ ...
+  <span class="hljs-attr">module</span>: {
+    <span class="hljs-attr">rules</span>: [
+       ...
+       {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.css$/</span>,
+        use: [MiniCssExtractPlugin.loader, <span class="hljs-string">&quot;css-loader&quot;</span>],
+      },
+      {
+        <span class="hljs-attr">test</span>: <span class="hljs-regexp">/.less/</span>,
+        use: [MiniCssExtractPlugin.loader, <span class="hljs-string">&quot;css-loader&quot;</span>, <span class="hljs-string">&quot;less-loader&quot;</span>],
+      },
+    ]
+  },
+  ...
+  <span class="hljs-attr">plugins</span>: [
+    <span class="hljs-keyword">new</span> MiniCssExtractPlugin({
+      <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name]_[contenthash:8].css&quot;</span>,
+    }),
+  ],
+};
+
+</code></pre><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h35cr3v3r6j20ea06lmxe.jpg" alt=""><figcaption>image-20220612123440977</figcaption></figure><h2 id="怎么做到webpack-模块化的自带缓存">怎么做到：webpack 模块化的自带缓存 <a class="markdownIt-Anchor" href="#怎么做到webpack-模块化的自带缓存">#</a></h2><p>webpack 内部实现模块化依赖<code>require</code>函数，此函数默认会实现缓存，加载过的模块不会再次进行加载动作，如果需要删除缓存可以使用如下语句，其中的 key 是指模块名</p><pre class="hljs"><code>delete require.cache[key]
+</code></pre><h2 id="怎么做到懒加载">怎么做到：懒加载 <a class="markdownIt-Anchor" href="#怎么做到懒加载">#</a></h2><p>代码库进行分割生成不同的 chunks，用到对应的 chunks 时才进行加载</p><ul><li>抽离相同代码到同一个共享块</li><li>脚本懒加载，入口页加速渲染</li></ul><h3 id="懒加载-js-脚本方式">懒加载 JS 脚本方式 <a class="markdownIt-Anchor" href="#懒加载-js-脚本方式">#</a></h3><ul><li>CommonJS：require.ensure</li><li>ES6：动态 import，目前没有原生支持，需要 babel 转换</li></ul><h3 id="实现动态-import">实现动态 import <a class="markdownIt-Anchor" href="#实现动态-import">#</a></h3><p>实现 text 组件开始不加载，点击按钮后才加载代码并显示</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h4d73phk0dj21q90u0785.jpg" alt=""><figcaption>2022-06-12 18.14.29</figcaption></figure><h5 id="安装依赖">安装依赖 <a class="markdownIt-Anchor" href="#安装依赖">#</a></h5><pre class="hljs"><code>npm install @babel/plugin-syntax-dynamic-import --save-dev
+</code></pre><h5 id="在-webpack-中使用">在 webpack 中使用 <a class="markdownIt-Anchor" href="#在-webpack-中使用">#</a></h5><p>.babelrc 中进行配置</p><pre class="hljs"><code>{
+    <span class="hljs-string">&quot;plugins&quot;</span>: [
+        <span class="hljs-string">&quot;@babel/plugin-syntax-dynamic-import&quot;</span>
+    ]
+}
+</code></pre><h5 id="项目结构">项目结构 <a class="markdownIt-Anchor" href="#项目结构">#</a></h5><pre class="hljs"><code>├── src
+│   └── search
+│       ├── index.html
+│       ├── index.js
+│       └── text.js
+</code></pre><p>index.js</p><pre class="hljs"><code><span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react&quot;</span>;
+<span class="hljs-keyword">import</span> ReactDOM <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react-dom&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Search</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">React</span>.<span class="hljs-title">Component</span> </span>{
+  <span class="hljs-function"><span class="hljs-title">constructor</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-built_in">super</span>(...arguments);
+    <span class="hljs-built_in">this</span>.state = {
+      <span class="hljs-attr">Text</span>: <span class="hljs-literal">null</span>,
+    };
+  }
+  <span class="hljs-function"><span class="hljs-title">loadComponent</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-keyword">import</span>(<span class="hljs-string">&quot;./text.js&quot;</span>).then(<span class="hljs-function">(<span class="hljs-params">Text</span>) =&gt;</span> {
+      <span class="hljs-built_in">console</span>.log(Text);
+      <span class="hljs-built_in">this</span>.setState({
+        <span class="hljs-attr">Text</span>: Text.default,
+      });
+    });
+  }
+  <span class="hljs-function"><span class="hljs-title">render</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-keyword">let</span> Text = <span class="hljs-built_in">this</span>.state.Text;
+    <span class="hljs-keyword">return</span> (
+      <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+        Search Text
+        {Text ? <span class="hljs-tag">&lt;<span class="hljs-name">Text</span> /&gt;</span> : null}
+        <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onClick</span>=<span class="hljs-string">{this.loadComponent.bind(this)}</span>&gt;</span>异步加载button<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>
+    );
+  }
+}
+
+ReactDOM.render(<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Search</span> /&gt;</span></span>, <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">&quot;root&quot;</span>));
+</code></pre><p>text.js</p><pre class="hljs"><code><span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react&quot;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Search</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">React</span>.<span class="hljs-title">Component</span> </span>{
+  <span class="hljs-function"><span class="hljs-title">render</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-keyword">return</span> <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>动态import<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>;
+  }
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> Search;
+</code></pre><p>index.html</p><pre class="hljs"><code><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Document Title<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;root&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../webpack插件训练营/day5. 性能优化篇：体积优化.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../webpack插件训练营/day7. webpack 核心工作流程.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item chapter-item-current"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"webpack插件训练营/day6. 性能优化篇：缓存.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E6%96%87%E4%BB%B6%E6%8C%87%E7%BA%B9">怎么做到：文件指纹</a>\n<ul>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84">项目目录结构</a></li>\n<li><a href="#%E6%96%87%E4%BB%B6%E6%8C%87%E7%BA%B9%E7%A7%8D%E7%B1%BB">文件指纹种类</a></li>\n<li><a href="#%E6%80%8E%E4%B9%88%E7%94%9F%E6%88%90%E6%96%87%E4%BB%B6%E6%8C%87%E7%BA%B9">怎么生成文件指纹</a></li>\n</ul>\n</li>\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0webpack-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%9A%84%E8%87%AA%E5%B8%A6%E7%BC%93%E5%AD%98">怎么做到：webpack 模块化的自带缓存</a></li>\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E6%87%92%E5%8A%A0%E8%BD%BD">怎么做到：懒加载</a>\n<ul>\n<li><a href="#%E6%87%92%E5%8A%A0%E8%BD%BD-js-%E8%84%9A%E6%9C%AC%E6%96%B9%E5%BC%8F">懒加载 JS 脚本方式</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E5%8A%A8%E6%80%81-import">实现动态 import</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>

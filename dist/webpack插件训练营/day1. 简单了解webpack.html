@@ -1,0 +1,150 @@
+<!DOCTYPE html><html><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="utf-8"><title># 要做什么：webpack打包的基础使用 - Documents</title><meta name="description" content=""><meta name="author" content=""><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1"><link rel="stylesheet" href="../assets/css/bulma.min.css"><link rel="stylesheet" href="../assets/css/app.css"><!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]--><link rel="shortcut icon" href=""></head><body dir="ltr"><nav class="columns navbar"><div class="column logo is-3 is-offset-1"><a class="is-brand" href="../index.html">Documents</a></div></nav><div class="columns content"><div class="column is-2-desktop is-3-widescreen is-hidden-touch"></div><div class="column article-container is-11-tablet is-8-desktop is-6-widescreen"><div class="breadcrumb-area"><a href="../index.html" class="breadcrumb-item">Home</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/index.html" class="breadcrumb-item">webpack插件训练营</a><span class="breadcrumb-delimiter"> &gt; </span><a href="../webpack插件训练营/day1. 简单了解webpack.html" class="breadcrumb-item">day1. 简单了解webpack.md</a></div><h1 class="article-title"># 要做什么：webpack打包的基础使用</h1><div class="article"><p>es6模块化应用，生成可直接在浏览器环境使用的js内容</p><h3 id="项目搭建">项目搭建 <a class="markdownIt-Anchor" href="#项目搭建">#</a></h3><p>我们先实现下基础的项目环境，这样就能避免因为依赖装错，版本不对等问题耽误各位同学时间了，我们需要创建如下结构的测试项目</p><pre class="hljs"><code>.
+|-- package.json
+</code></pre><p>补充：一个个建目录太麻烦，推荐个人开发的vscode插件weiyi-tools，安装好后</p><ol><li>复制上面目录结构内容</li><li>在侧边栏自己想要的空目录处右键</li><li>找到【选中目录工具箱 - 根据tree结果生成目录】，点击</li></ol><p>效果如下</p><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h45fa7fyjkj217v0u0q56.jpg" alt="2022-06-24 14.40.09" style="zoom:25%;"><p>考虑到版本等原因，本处直接贴上项目的package.json，这样子目录就可以复用最外层的依赖了，避免每个实战都需要安装依赖</p><pre class="hljs"><code>{
+    <span class="hljs-attr">&quot;name&quot;</span>: <span class="hljs-string">&quot;webpack-study&quot;</span>,
+    <span class="hljs-attr">&quot;version&quot;</span>: <span class="hljs-string">&quot;1.0.0&quot;</span>,
+    <span class="hljs-attr">&quot;description&quot;</span>: <span class="hljs-string">&quot;- entry\r - chunk&quot;</span>,
+    <span class="hljs-attr">&quot;main&quot;</span>: <span class="hljs-string">&quot;webpack.config.js&quot;</span>,
+    <span class="hljs-attr">&quot;devDependencies&quot;</span>: {
+        <span class="hljs-attr">&quot;@babel/core&quot;</span>: <span class="hljs-string">&quot;^7.4.4&quot;</span>,
+        <span class="hljs-attr">&quot;@babel/plugin-syntax-dynamic-import&quot;</span>: <span class="hljs-string">&quot;^7.2.0&quot;</span>,
+        <span class="hljs-attr">&quot;@babel/preset-env&quot;</span>: <span class="hljs-string">&quot;^7.4.4&quot;</span>,
+        <span class="hljs-attr">&quot;@babel/preset-react&quot;</span>: <span class="hljs-string">&quot;^7.0.0&quot;</span>,
+        <span class="hljs-attr">&quot;autoprefixer&quot;</span>: <span class="hljs-string">&quot;^9.5.1&quot;</span>,
+        <span class="hljs-attr">&quot;babel-eslint&quot;</span>: <span class="hljs-string">&quot;^10.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;babel-loader&quot;</span>: <span class="hljs-string">&quot;^8.0.5&quot;</span>,
+        <span class="hljs-attr">&quot;clean-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^2.0.2&quot;</span>,
+        <span class="hljs-attr">&quot;css-loader&quot;</span>: <span class="hljs-string">&quot;^2.1.1&quot;</span>,
+        <span class="hljs-attr">&quot;cssnano&quot;</span>: <span class="hljs-string">&quot;^4.1.10&quot;</span>,
+        <span class="hljs-attr">&quot;eslint&quot;</span>: <span class="hljs-string">&quot;^5.16.0&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-config-airbnb&quot;</span>: <span class="hljs-string">&quot;^17.1.0&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-config-airbnb-base&quot;</span>: <span class="hljs-string">&quot;^13.1.0&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-loader&quot;</span>: <span class="hljs-string">&quot;^2.1.2&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-plugin-import&quot;</span>: <span class="hljs-string">&quot;^2.17.3&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-plugin-jsx-a11y&quot;</span>: <span class="hljs-string">&quot;^6.2.1&quot;</span>,
+        <span class="hljs-attr">&quot;eslint-plugin-react&quot;</span>: <span class="hljs-string">&quot;^7.13.0&quot;</span>,
+        <span class="hljs-attr">&quot;express&quot;</span>: <span class="hljs-string">&quot;^4.17.1&quot;</span>,
+        <span class="hljs-attr">&quot;file-loader&quot;</span>: <span class="hljs-string">&quot;^3.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;friendly-errors-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^1.7.0&quot;</span>,
+        <span class="hljs-attr">&quot;glob&quot;</span>: <span class="hljs-string">&quot;^7.1.4&quot;</span>,
+        <span class="hljs-attr">&quot;html-inline-css-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^1.2.1&quot;</span>,
+        <span class="hljs-attr">&quot;html-loader&quot;</span>: <span class="hljs-string">&quot;^0.5.5&quot;</span>,
+        <span class="hljs-attr">&quot;html-webpack-externals-plugin&quot;</span>: <span class="hljs-string">&quot;^3.8.0&quot;</span>,
+        <span class="hljs-attr">&quot;html-webpack-inline-source-plugin&quot;</span>: <span class="hljs-string">&quot;0.0.10&quot;</span>,
+        <span class="hljs-attr">&quot;html-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^3.2.0&quot;</span>,
+        <span class="hljs-attr">&quot;less&quot;</span>: <span class="hljs-string">&quot;^3.9.0&quot;</span>,
+        <span class="hljs-attr">&quot;less-loader&quot;</span>: <span class="hljs-string">&quot;^5.0.0&quot;</span>,
+        <span class="hljs-attr">&quot;mini-css-extract-plugin&quot;</span>: <span class="hljs-string">&quot;^0.6.0&quot;</span>,
+        <span class="hljs-attr">&quot;node-notifier&quot;</span>: <span class="hljs-string">&quot;^5.4.0&quot;</span>,
+        <span class="hljs-attr">&quot;optimize-css-assets-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^5.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;postcss-loader&quot;</span>: <span class="hljs-string">&quot;^3.0.0&quot;</span>,
+        <span class="hljs-attr">&quot;postcss-preset-env&quot;</span>: <span class="hljs-string">&quot;^6.6.0&quot;</span>,
+        <span class="hljs-attr">&quot;px2rem-loader&quot;</span>: <span class="hljs-string">&quot;^0.1.9&quot;</span>,
+        <span class="hljs-attr">&quot;raw-loader&quot;</span>: <span class="hljs-string">&quot;^0.5.1&quot;</span>,
+        <span class="hljs-attr">&quot;react&quot;</span>: <span class="hljs-string">&quot;^16.8.6&quot;</span>,
+        <span class="hljs-attr">&quot;react-dom&quot;</span>: <span class="hljs-string">&quot;^16.8.6&quot;</span>,
+        <span class="hljs-attr">&quot;rimraf&quot;</span>: <span class="hljs-string">&quot;^2.6.3&quot;</span>,
+        <span class="hljs-attr">&quot;style-loader&quot;</span>: <span class="hljs-string">&quot;^0.23.1&quot;</span>,
+        <span class="hljs-attr">&quot;terser-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^1.3.0&quot;</span>,
+        <span class="hljs-attr">&quot;uglifyjs-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^2.1.2&quot;</span>,
+        <span class="hljs-attr">&quot;url-loader&quot;</span>: <span class="hljs-string">&quot;^1.1.2&quot;</span>,
+        <span class="hljs-attr">&quot;webpack&quot;</span>: <span class="hljs-string">&quot;^4.31.0&quot;</span>,
+        <span class="hljs-attr">&quot;webpack-cli&quot;</span>: <span class="hljs-string">&quot;^3.3.2&quot;</span>,
+        <span class="hljs-attr">&quot;webpack-dev-server&quot;</span>: <span class="hljs-string">&quot;^3.3.1&quot;</span>,
+        <span class="hljs-attr">&quot;cache-loader&quot;</span>: <span class="hljs-string">&quot;^4.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;happypack&quot;</span>: <span class="hljs-string">&quot;^5.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;hard-source-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^0.13.1&quot;</span>,
+        <span class="hljs-attr">&quot;image-webpack-loader&quot;</span>: <span class="hljs-string">&quot;^5.0.0&quot;</span>,
+        <span class="hljs-attr">&quot;purgecss-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^1.5.0&quot;</span>,
+        <span class="hljs-attr">&quot;speed-measure-webpack-plugin&quot;</span>: <span class="hljs-string">&quot;^1.3.1&quot;</span>,
+        <span class="hljs-attr">&quot;thread-loader&quot;</span>: <span class="hljs-string">&quot;^2.1.2&quot;</span>,
+        <span class="hljs-attr">&quot;webpack-bundle-analyzer&quot;</span>: <span class="hljs-string">&quot;^3.3.2&quot;</span>
+    },
+    <span class="hljs-attr">&quot;dependencies&quot;</span>: {
+        <span class="hljs-attr">&quot;babel-polyfill&quot;</span>: <span class="hljs-string">&quot;^6.26.0&quot;</span>,
+        <span class="hljs-attr">&quot;jszip&quot;</span>: <span class="hljs-string">&quot;^3.10.0&quot;</span>,
+        <span class="hljs-attr">&quot;large-number&quot;</span>: <span class="hljs-string">&quot;^1.0.1&quot;</span>,
+        <span class="hljs-attr">&quot;lib-flexible&quot;</span>: <span class="hljs-string">&quot;^0.3.2&quot;</span>,
+        <span class="hljs-attr">&quot;webpack-merge&quot;</span>: <span class="hljs-string">&quot;^5.8.0&quot;</span>,
+        <span class="hljs-attr">&quot;wzyan-large-number&quot;</span>: <span class="hljs-string">&quot;^1.0.2&quot;</span>
+    },
+    <span class="hljs-attr">&quot;scripts&quot;</span>: {
+        <span class="hljs-attr">&quot;dev&quot;</span>: <span class="hljs-string">&quot;webpack-dev-server --open --config webpack.dev.js&quot;</span>,
+        <span class="hljs-attr">&quot;build&quot;</span>: <span class="hljs-string">&quot;webpack --config webpack.prod.js&quot;</span>,
+        <span class="hljs-attr">&quot;watch&quot;</span>: <span class="hljs-string">&quot;webpack --watch&quot;</span>,
+        <span class="hljs-attr">&quot;build:ssr&quot;</span>: <span class="hljs-string">&quot;webpack --config 15.webpack实现react-ssr打包/webpack.ssr.js &amp;&amp; nodemon 15.webpack实现react-ssr打包/server/index.js&quot;</span>,
+        <span class="hljs-attr">&quot;build:stats&quot;</span>: <span class="hljs-string">&quot;webpack --config 21.webpack性能分析/webpack.config.js --json &gt; stats.json&quot;</span>,
+        <span class="hljs-attr">&quot;build:speed-stats&quot;</span>: <span class="hljs-string">&quot;webpack --config 21.webpack性能分析/webpack.speed.js&quot;</span>,
+        <span class="hljs-attr">&quot;build:bundle-stats&quot;</span>: <span class="hljs-string">&quot;webpack --config 21.webpack性能分析/webpack.bundle.js&quot;</span>
+    },
+    <span class="hljs-attr">&quot;keywords&quot;</span>: [],
+    <span class="hljs-attr">&quot;author&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-attr">&quot;license&quot;</span>: <span class="hljs-string">&quot;ISC&quot;</span>
+}
+</code></pre><p>然后在最外层安装依赖即可</p><pre class="hljs"><code>npm i
+</code></pre><p><strong>注意</strong>：这种直接给出package.json的行为是为避免更新未做到向上兼容情况，从而锁定版本下载；日常开发中很难满足，所以在后续文章中会告知实现特性对应所需要的依赖，方便后续日常开发中复用，无需安装</p><h2 id="怎么做到尽可能做到复制粘贴就能有成果">怎么做到：尽可能做到复制粘贴就能有成果 <a class="markdownIt-Anchor" href="#怎么做到尽可能做到复制粘贴就能有成果">#</a></h2><h3 id="对应依赖">对应依赖 <a class="markdownIt-Anchor" href="#对应依赖">#</a></h3><p>备注：外层已安装，无需安装，只是为了方便后续日常开发中复用</p><p>4版本后，webpack将cli分离了，所以需要两个都按照</p><pre class="hljs"><code>npm i webpack@4.44.1 webpack-cli@3.3.12 -S
+</code></pre><p>查看版本确定是否安装成功</p><pre class="hljs"><code>./node_module/.bin/webpack -v
+</code></pre><p>为了方便看效果和避免每次都要手动清理打包产物，我们用两个插件：html-webpack-plugin 和 clean-webpack-plugin；先安装下依赖</p><pre class="hljs"><code>npm i html-webpack-plugin@<span class="hljs-number">4.4</span><span class="hljs-number">.1</span> clean-webpack-plugin@<span class="hljs-number">3.0</span><span class="hljs-number">.0</span>
+</code></pre><h3 id="项目基础结构">项目基础结构 <a class="markdownIt-Anchor" href="#项目基础结构">#</a></h3><p>创建<code>1.webpack初识</code>目录，在其下实现如下结构</p><pre class="hljs"><code>.
+|-- src
+|   |-- helloworld.js
+|   |-- index.html
+|   |-- index.js
+|-- webpack.config.js
+</code></pre><h3 id="webpack打包的基础使用需求">webpack打包的基础使用需求 <a class="markdownIt-Anchor" href="#webpack打包的基础使用需求">#</a></h3><ol><li>将index.js设为入口文件</li><li>在helloworld.js中实现一个简单的【打印hello world】的功能，然后在index.js目录内导入</li><li>打包后js文件使用html模板文件引入</li><li>启动静态资源服务器，在浏览器中访问</li></ol><h3 id="实现一将indexjs设为入口文件">实现一：将index.js设为入口文件 <a class="markdownIt-Anchor" href="#实现一将indexjs设为入口文件">#</a></h3><p>在<code>webpack.config.js</code>中存在entry字段，用于指定入口文件</p><p><code>webpack.config.js</code></p><pre class="hljs"><code>entry: {
+    <span class="hljs-attr">main</span>: <span class="hljs-string">&quot;./src/index.js&quot;</span>,
+  },
+</code></pre><h3 id="实现二业务实现">实现二：业务实现 <a class="markdownIt-Anchor" href="#实现二业务实现">#</a></h3><p>在helloworld.js中实现一个简单的【打印hello world】的功能，然后在index.js目录内导入，使用es6模块化语法即可</p><p><code>src/index.js</code></p><pre class="hljs"><code><span class="hljs-keyword">import</span> { helloworld } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;./helloworld&quot;</span>;
+
+<span class="hljs-built_in">document</span>.write(helloworld());
+</code></pre><p><code>src/helloworld.js</code></p><pre class="hljs"><code><span class="hljs-keyword">export</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">helloworld</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;hellow webpack&#x27;</span>
+}
+</code></pre><h3 id="实现三打包后js文件使用html模板文件引入">实现三：打包后js文件使用html模板文件引入 <a class="markdownIt-Anchor" href="#实现三打包后js文件使用html模板文件引入">#</a></h3><p><code>src/index.html</code></p><pre class="hljs"><code><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">html</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">&quot;en&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">&quot;UTF-8&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;viewport&quot;</span> <span class="hljs-attr">content</span>=<span class="hljs-string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Document<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre><p>这里可以手动引入，在上面的html模板中写script标签，但更常见的写法是使用webpack的插件<code>html-webpack-plugin</code>;</p><p>在<code>webpack.config.js</code>中存在plugins字段，用于指定要用到的插件（插件其实就是一个存在apply方法的类）</p><pre class="hljs"><code><span class="hljs-keyword">const</span> HtmlWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;html-webpack-plugin&quot;</span>);
+<span class="hljs-built_in">module</span>.exports = {
+  ....
+  <span class="hljs-attr">plugins</span>: [
+    <span class="hljs-keyword">new</span> HtmlWebpackPlugin({
+      <span class="hljs-attr">template</span>: <span class="hljs-string">&quot;./src/index.html&quot;</span>,
+      <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;index.html&quot;</span>,
+    })
+  ],
+};
+
+</code></pre><h5 id="最终的webpack配置文件">最终的webpack配置文件 <a class="markdownIt-Anchor" href="#最终的webpack配置文件">#</a></h5><pre class="hljs"><code><span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;path&quot;</span>);
+<span class="hljs-keyword">const</span> HtmlWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;html-webpack-plugin&quot;</span>);
+<span class="hljs-keyword">const</span> CleanWebpackPlugin = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;clean-webpack-plugin&#x27;</span>);
+
+<span class="hljs-built_in">module</span>.exports = {
+  <span class="hljs-attr">context</span>: process.cwd(), <span class="hljs-comment">// 上下文对象</span>
+  <span class="hljs-attr">mode</span>: <span class="hljs-string">&quot;production&quot;</span>,
+  <span class="hljs-attr">entry</span>: {
+    <span class="hljs-attr">main</span>: <span class="hljs-string">&quot;./src/index.js&quot;</span>,
+  },
+
+  <span class="hljs-attr">output</span>: {
+    <span class="hljs-attr">path</span>: path.resolve(__dirname, <span class="hljs-string">&quot;./dist&quot;</span>),
+    <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;[name].js&quot;</span>,
+  },
+  <span class="hljs-attr">plugins</span>: [
+    <span class="hljs-keyword">new</span> HtmlWebpackPlugin({
+      <span class="hljs-attr">template</span>: <span class="hljs-string">&quot;./src/index.html&quot;</span>,
+      <span class="hljs-attr">filename</span>: <span class="hljs-string">&quot;index.html&quot;</span>,
+    }),
+    <span class="hljs-keyword">new</span> CleanWebpackPlugin()
+  ],
+};
+</code></pre><p>这时，我们切换进<code>1.webpack初识</code>目录，然后运行打包命令</p><pre class="hljs"><code>cd 1.webpack初识 &amp;&amp; npx webpack
+</code></pre><p>就会存在打包产物dist目录了。</p><h3 id="实现四启动静态资源服务器在浏览器中访问">实现四：启动静态资源服务器，在浏览器中访问 <a class="markdownIt-Anchor" href="#实现四启动静态资源服务器在浏览器中访问">#</a></h3><p>这个点建议使用全局命令包<code>live-server</code>进行启动，如果之前有安装【weiyi-tools】vscode插件，则更为简单，在dist目录右键即可</p><figure><img src="https://tva1.sinaimg.cn/large/e6c9d24ely1h467uvnnzjg21et0lftlj.gif" alt=""><figcaption>2022-06-08 10.50.01</figcaption></figure><p>（面向问题：我们使用 live-server 启动一个静态服务，但每次都要经历【开终端 - cd 到指定目录 - 执行 live-server】，终端还不能干掉）</p><p>至此，我们就完成了一个webpack打包最基础的使用啦！</p><h2 id="课后作业用于感兴趣同学的拔高">课后作业：用于感兴趣同学的拔高 <a class="markdownIt-Anchor" href="#课后作业用于感兴趣同学的拔高">#</a></h2></div><div dir="ltr" class="level article-bar is-mobile"><div class="level-item has-text-centered"><a title="previous page" class="previouse-article-link" href="../webpack插件训练营/index.html"><span class="icon icon-previous" data-icon="previous"></span><span class="link-content">&laquo; Previous</span></a></div><div class="level-item has-text-centered"><a title="font size" class="link-item link-item-size"><span class="icon icon-size" data-icon="size"></span></a></div><div class="level-item has-text-centered"><a title="table of content" class="link-item link-item-toc"><span class="icon icon-toc" data-icon="toc"></span></a></div><div class="level-item has-text-centered"><a title="top" href="#"><span class="icon icon-up" data-icon="up"></span> <span class="link-content">⤊ Top</span></a></div><div class="level-item has-text-centered"><a title="next page" class="next-article-link" href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html"><span class="icon icon-next" data-icon="next"></span><span class="link-content">Next &raquo;</span></a></div></div></div><div class="column is-2-widescreen is-hidden"></div></div><div class="columns foot"><div class="column is-3 is-offset-9 build-by">Build by <a href="https://github.com/ruanyf/loppo" target="_blank">Loppo</a> 0.6.24</div></div><div class="book-toc notification is-warning is-hidden"><h3>Table of chapters &nbsp;<span class="title-close"><a class="button is-danger"> Close</a></span></h3><ul class="chapter-area"><li class="chapter-item"><a href="../shell编程训练营/index.html">shell编程训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../shell编程训练营/1. Shell 的基本介绍、常用命令以及 Shell 的流程控制.html">我们为什么要学习shell</a></li><li class="chapter-item"><a href="../shell编程训练营/2. Shell 中的数组应用、参数处理和函数的应用.html">shell之语句</a></li><li class="chapter-item"><a href="../shell编程训练营/3. Shell 的函数、模块化、公共函数库.html">shell之函数</a></li><li class="chapter-item"><a href="../shell编程训练营/4. Shell周边：语言特殊点调试 Debug 方案vscode对shell的支持.html">语言特殊点</a></li><li class="chapter-item"><a href="../shell编程训练营/开营前置信息.html">开营前置信息.md</a></li></ul><li class="chapter-item"><a href="../vscode训练营/index.html">vscode训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../vscode训练营/day1：简单了解插件开发.html">day1：简单了解插件开发.md</a></li><li class="chapter-item"><a href="../vscode训练营/day2：实现一个简单代码工具.html">day2：实现一个简单代码工具.md</a></li><li class="chapter-item"><a href="../vscode训练营/day3：vscode配置文件.html">day3：vscode配置文件.md</a></li><li class="chapter-item"><a href="../vscode训练营/day4：完善工具，添加更多功能并发布.html">然后输入之前获取到的 token</a></li><li class="chapter-item"><a href="../vscode训练营/开营计划.html">开营计划.md</a></li></ul><li class="chapter-item"><a href="../webpack插件训练营/index.html">webpack插件训练营</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-collapse" data-icon="collapse"></span></a></li><ul class="chapter-level-1 chapter-level-1-current"><li class="chapter-item chapter-item-current"><a href="../webpack插件训练营/day1. 简单了解webpack.html">day1. 简单了解webpack.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day2. webpack配置文件拆分及开发环境搭建.html">day2. webpack配置文件拆分及开发环境搭建.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day3. 文件类型处理篇.html">day3. 文件类型处理篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day4. 性能分析篇.html">day4. 性能分析篇.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day5. 性能优化篇：体积优化.html">day5. 性能优化篇：体积优化.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day6. 性能优化篇：缓存.html">day6. 性能优化篇：缓存.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day7. webpack 核心工作流程.html">day7. webpack 核心工作流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/day8. 熟悉插件和loader的发布流程.html">day8. 熟悉插件和loader的发布流程.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：px转rem.html">提效技巧篇：px转rem.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：基于glob实现自动化路由的MPA.html">提效技巧篇：基于glob实现自动化路由的MPA.md</a></li><li class="chapter-item"><a href="../webpack插件训练营/提效技巧篇：浏览器前缀自动添加.html">提效技巧篇：浏览器前缀自动添加.md</a></li></ul><li class="chapter-item"><a href="../前端爬虫/index.html">前端爬虫</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../前端爬虫/1. 了解爬虫 - puppetter实战.html">1. 了解爬虫 - puppetter实战.md</a></li><li class="chapter-item"><a href="../前端爬虫/2. 数据入库.html">2. 数据入库.md</a></li><li class="chapter-item"><a href="../前端爬虫/3. 展示应用实现.html">3. 展示应用实现.md</a></li><li class="chapter-item"><a href="../前端爬虫/4. 实战：kkb一键爬取所有vip课程.html">4. 实战：kkb一键爬取所有vip课程.md</a></li><li class="chapter-item"><a href="../前端爬虫/开营计划.html">开营计划.md</a></li></ul></ul><li class="chapter-item"><a href="../学习小组规划.html">学习小组规划.md</a></li><li class="chapter-item"><a href="../开营计划.html">开营计划.md</a></li><li class="chapter-item"><a href="../模板.html">模板.md</a></li><li class="chapter-item"><a href="../谷歌浏览器插件/index.html">谷歌浏览器插件</a>&nbsp;<a class="first-level-collapse"><span class="icon icon-expand" data-icon="expand"></span></a></li><ul class="chapter-level-1"><li class="chapter-item"><a href="../谷歌浏览器插件/开营计划.html">开营计划.md</a></li></ul></div><div class="progress-indicator"></div><!-- SCRIPTS --><script>var LOPPO={current_path:"webpack插件训练营/day1. 简单了解webpack.md",relative_root_path:"../",article_toc:'<ul class="markdownIt-TOC">\n<li>\n<ul>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E6%90%AD%E5%BB%BA">项目搭建</a></li>\n</ul>\n</li>\n<li><a href="#%E6%80%8E%E4%B9%88%E5%81%9A%E5%88%B0%E5%B0%BD%E5%8F%AF%E8%83%BD%E5%81%9A%E5%88%B0%E5%A4%8D%E5%88%B6%E7%B2%98%E8%B4%B4%E5%B0%B1%E8%83%BD%E6%9C%89%E6%88%90%E6%9E%9C">怎么做到：尽可能做到复制粘贴就能有成果</a>\n<ul>\n<li><a href="#%E5%AF%B9%E5%BA%94%E4%BE%9D%E8%B5%96">对应依赖</a></li>\n<li><a href="#%E9%A1%B9%E7%9B%AE%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84">项目基础结构</a></li>\n<li><a href="#webpack%E6%89%93%E5%8C%85%E7%9A%84%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8%E9%9C%80%E6%B1%82">webpack打包的基础使用需求</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E4%B8%80%E5%B0%86indexjs%E8%AE%BE%E4%B8%BA%E5%85%A5%E5%8F%A3%E6%96%87%E4%BB%B6">实现一：将index.js设为入口文件</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E4%BA%8C%E4%B8%9A%E5%8A%A1%E5%AE%9E%E7%8E%B0">实现二：业务实现</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E4%B8%89%E6%89%93%E5%8C%85%E5%90%8Ejs%E6%96%87%E4%BB%B6%E4%BD%BF%E7%94%A8html%E6%A8%A1%E6%9D%BF%E6%96%87%E4%BB%B6%E5%BC%95%E5%85%A5">实现三：打包后js文件使用html模板文件引入</a></li>\n<li><a href="#%E5%AE%9E%E7%8E%B0%E5%9B%9B%E5%90%AF%E5%8A%A8%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%AE%BF%E9%97%AE">实现四：启动静态资源服务器，在浏览器中访问</a></li>\n</ul>\n</li>\n<li><a href="#%E8%AF%BE%E5%90%8E%E4%BD%9C%E4%B8%9A%E7%94%A8%E4%BA%8E%E6%84%9F%E5%85%B4%E8%B6%A3%E5%90%8C%E5%AD%A6%E7%9A%84%E6%8B%94%E9%AB%98">课后作业：用于感兴趣同学的拔高</a></li>\n</ul>\n'}</script><script src="../assets/js/app.js"></script></body></html>
